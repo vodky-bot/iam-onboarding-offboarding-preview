@@ -643,14 +643,35 @@
       <span class="attr">department</span> et <span class="attr">manager</span> soient remplis
       pour au moins la première cohorte pilote — sinon les workflows ne se déclenchent jamais
       ou se déclenchent sur des données vides.</li>
-      <li><strong>Qui saisit ces attributs, concrètement.</strong> Le dossier identifie le RH
-      comme Responsable mais ne nomme personne. Question à poser à Ronny : qui, nommément,
-      aura les droits d'édition sur ces attributs dans Entra — un rôle délégué, pas Global
-      Admin ?</li>
       <li><strong>Fenêtre de test.</strong> Lifecycle Workflows peut tourner en mode simulation
       — dry-run, sans exécution réelle des tâches — avant activation, pour valider les triggers
       sur la cohorte pilote sans risque.</li>
     </ol>
+
+    <div class="callout resolved">
+      <span class="tag">Tranché</span>
+      <p><strong>Droits d'édition sur les attributs RH : rôle délégué conçu, pas demandé à
+      Ronny.</strong> Design benchmarké contre Entra ID Governance / Okta / SailPoint — le
+      principe constant dans les trois est <em>least privilege + accountability</em>, jamais un
+      rôle large par confort :</p>
+      <p><strong>Rôle custom <span class="attr">HR Attribute Editor</span></strong>, pas
+      <em>User Administrator</em> — bien trop large, ouvrirait reset password, MFA et
+      suppression de compte. Permissions Graph limitées aux quatre attributs du déclencheur
+      (<span class="attr">employeeHireDate</span>, <span class="attr">employeeLeaveDateTime</span>,
+      <span class="attr">department</span>, <span class="attr">manager</span>) — rien d'autre
+      n'est éditable par ce rôle.</p>
+      <p><strong>Scope réduit par Administrative Unit</strong> (<span class="attr">AU-RH-managed-users</span>) :
+      le rôle ne porte que sur les comptes de la cohorte pilote, jamais sur tout le tenant — le
+      rôle large scope-tenant est l'anti-pattern le plus cité dans la documentation Entra.</p>
+      <p><strong>Assignation PIM-éligible</strong>, pas permanente : activation à la saisie
+      d'une date, sur une fenêtre courte, plutôt qu'un accès debout en continu — réduit la
+      fenêtre d'exposition si le compte RH est compromis.</p>
+      <p><strong>Accountability, pas anonymat</strong> : le rôle a un propriétaire métier — la
+      fonction RH désignée par Ronny dans son organigramme, pas un nom à lui extraire — qui
+      répond de « cet accès a-t-il encore un sens ? » à chaque revue. Le nom de la personne est
+      un détail d'exécution que Ronny règle au moment d'assigner le rôle, pas un préalable au
+      design.</p>
+    </div>
   </section>
 
   <section class="doc-section" id="b3">
