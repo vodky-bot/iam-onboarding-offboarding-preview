@@ -387,6 +387,14 @@
       <li><a href="#b4"><span class="n">4</span>Séquence de mise en route</a></li>
       <li><a href="#b5"><span class="n">5</span>Décisions par défaut</a></li>
     </ul>
+    <p class="group-label">Partie C — Phase 2</p>
+    <ul>
+      <li><a href="#c1"><span class="n">1</span>Pourquoi ce bloc</a></li>
+      <li><a href="#c2"><span class="n">2</span>Prérequis</a></li>
+      <li><a href="#c3"><span class="n">3</span>Config. technique</a></li>
+      <li><a href="#c4"><span class="n">4</span>Séquence de mise en route</a></li>
+      <li><a href="#c5"><span class="n">5</span>Décisions par défaut</a></li>
+    </ul>
   </nav>
 </aside>
 
@@ -752,6 +760,116 @@
       <li><strong>Nom de la personne RH assignée au rôle <span class="attr">HR Attribute
       Editor</span></strong> — geste d'exécution que Ronny fait quand il le souhaite (§2), plus
       une question ouverte de cadrage.</li>
+    </ul>
+  </section>
+
+  <!-- ============ PART C : Phase 2 guide ============ -->
+  <div class="part-divider">
+    <span class="num">C</span>
+    <div><div class="label">Guide de mise en œuvre</div><h2>Phase 2 — Accès avec approbation</h2></div>
+  </div>
+
+  <section class="doc-section" id="c1">
+    <h3><span class="sec-n">1</span>Pourquoi ce bloc vient après le birthright</h3>
+    <p>Un Access Package — le concept central de ce bloc — attribue des droits à un compte Entra
+    déjà existant : il a donc besoin que le birthright ait déjà fait son travail (création du
+    compte, accès de base). Les deux blocs cohabitent en continu une fois lancés, ce n'est pas un
+    remplacement de l'un par l'autre.</p>
+    <div class="callout resolved">
+      <span class="tag">Distinction à garder simple</span>
+      <p><strong>Birthright</strong> = ce que tout le monde a d'office selon son poste.
+      <strong>Entitlement Management</strong> = ce qu'on demande en plus, et que quelqu'un doit
+      approuver.</p>
+    </div>
+  </section>
+
+  <section class="doc-section" id="c2">
+    <h3><span class="sec-n">2</span>Prérequis avant de configurer quoi que ce soit</h3>
+    <ol>
+      <li><strong>Licence</strong> — même add-on Entra ID Governance que Lifecycle Workflows,
+      déjà confirmée présente au tenant. Aucun point bloquant supplémentaire.</li>
+      <li><strong>Un catalogue et au moins un access package définis avant tout test.</strong>
+      Contrairement à Lifecycle Workflows (case à cocher globale), Entitlement Management ne fait
+      rien tant qu'aucun catalogue de ressources n'existe — c'est un contenu à créer, pas un
+      interrupteur.</li>
+      <li><strong>Identifier les approbateurs réels.</strong> Le flux repose sur des managers qui
+      répondent aux demandes dans My Access. Si l'attribut <span class="attr">manager</span>
+      n'est pas renseigné dans Entra pour quelqu'un, l'approbation ne peut pas se déclencher pour
+      lui — même dépendance de discipline de saisie RH que la Phase 1.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="c3">
+    <h3><span class="sec-n">3</span>Configuration technique</h3>
+
+    <h4>Concepts natifs</h4>
+    <p><strong>Catalogue</strong> : conteneur de ressources regroupées par thème (ex. « Outils
+    Finance », « Accès Projet X »). <strong>Access Package</strong> : le lot demandable —
+    regroupe des ressources (groupes de sécurité, groupes M365/Teams, rôles d'applications
+    d'entreprise, sites SharePoint) avec une ou plusieurs <em>policies</em>. <strong>Policy</strong> :
+    règle d'accès à un package donné — qui peut demander, qui approuve, pour combien de temps.</p>
+
+    <h4>Structure des catalogues</h4>
+    <p>Plutôt qu'un catalogue unique pour tout le tenant — anti-pattern : personne n'a de vue
+    claire sur qui approuve quoi — structurer par département ou fonction métier, à l'image du
+    scope AU déjà utilisé pour le rôle délégué RH en Phase 1. Chaque catalogue a un propriétaire
+    métier identifié ; l'IT reste consulté sur la faisabilité technique, pas responsable de juger
+    si un accès métier est pertinent.</p>
+
+    <h4>Chaîne d'approbation</h4>
+    <p>Recommandation pour la cohorte pilote (mêmes 5 à 10 personnes que la Phase 1) :</p>
+    <ul>
+      <li><strong>Approbateur primaire : le manager</strong> de la personne qui demande —
+      cohérent avec le RACI du dossier (§4.1 : Manager = Approbateur des accès complémentaires).</li>
+      <li><strong>Étape secondaire optionnelle : le propriétaire de la ressource</strong>, pour
+      les accès sensibles seulement (financier, RH). Ne pas systématiser le multi-étapes — un
+      accès bureautique standard n'a pas besoin de deux signatures.</li>
+      <li><strong>Délai de réponse avec refus automatique</strong> plutôt qu'une demande qui
+      reste en attente indéfiniment — sinon le mécanisme d'approbation devient un point mort
+      silencieux.</li>
+      <li><strong>Justification obligatoire côté demandeur</strong>, conservée dans l'historique
+      — sert de preuve lors des access reviews et en cas d'audit.</li>
+    </ul>
+
+    <h4>Expiration et Access Reviews</h4>
+    <p>Toute assignation a une durée définie, jamais « illimité » par défaut — même principe que
+    l'assignation PIM du rôle <span class="attr">HR Attribute Editor</span> en Phase 1. Un Access
+    Review trimestriel, aligné sur le point de vigilance mover (§4.3), où l'approbateur
+    reconfirme ou révoque chaque accès ; sans reconfirmation dans le délai, révocation
+    automatique. C'est ce mécanisme qui couvre le risque mover identifié plus haut — un accès
+    hérité d'un ancien poste jamais retiré.</p>
+
+    <h4>Hors périmètre natif</h4>
+    <p>Approbation conditionnelle à une règle métier complexe, ou intégration avec un outil de
+    ticketing externe pour tracer la demande côté IT : nécessite une Logic App en Custom
+    Extension, rien de natif dans la policy d'approbation standard.</p>
+  </section>
+
+  <section class="doc-section" id="c4">
+    <h3><span class="sec-n">4</span>Séquence de mise en route proposée</h3>
+    <ol class="phase-list">
+      <li>Créer un premier catalogue restreint à la cohorte pilote de la Phase 1 — mêmes
+      personnes, pour tester le parcours de bout en bout birthright → accès complémentaire.</li>
+      <li>Publier 1 à 2 access packages simples (un outil métier courant) avec approbation
+      manager seule, sans étape secondaire, pour valider le mécanisme avant de complexifier.</li>
+      <li>Tester le parcours demandeur → approbateur → activation dans My Access en conditions
+      réelles — Entitlement Management n'a pas de mode dry-run comme Lifecycle Workflows, la
+      validation se fait sur un scope restreint plutôt qu'en simulation.</li>
+      <li>Configurer le premier Access Review une fois le premier cycle d'assignations stable.</li>
+      <li>Extension progressive : plus de catalogues, plus de packages, étapes secondaires là où
+      le niveau de sensibilité le justifie.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="c5">
+    <h3><span class="sec-n">5</span>Décisions prises par défaut</h3>
+    <p>Pas de blocage sur Ronny pour démarrer :</p>
+    <ul>
+      <li><strong>Pas de multi-étapes d'approbation par défaut</strong> — une seule étape
+      (manager), sauf ressource explicitement sensible désignée plus tard.</li>
+      <li><strong>Délai de réponse : 14 jours, refus automatique passé ce délai.</strong></li>
+      <li><strong>Cadence Access Review : trimestrielle</strong>, alignée sur le point de
+      vigilance mover déjà acté dans le dossier.</li>
     </ul>
   </section>
 
