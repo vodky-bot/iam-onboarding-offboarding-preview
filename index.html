@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IAM Onboarding / Offboarding — Dossier d'architecture</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23f4efe4%22/><text x=%2250%22 y=%2270%22 font-size=%2270%22 text-anchor=%22middle%22 fill=%22%239c3f1f%22 font-family=%22serif%22>A</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4efe4;
+    --paper-deep:#ece4d3;
+    --ink:#211d17;
+    --ink-soft:#5a5145;
+    --rule:#d8cdb6;
+    --accent:#9c3f1f;
+    --accent-soft:#c96a3f;
+    --teal:#2f5d53;
+    --amber:#b5842e;
+    --card:#faf7ef;
+    --shadow: 0 1px 0 rgba(33,29,23,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Newsreader", Georgia, serif;
+    font-size:18px;
+    line-height:1.65;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(33,29,23,.05) 1px, transparent 0);
+    background-size: 26px 26px;
+  }
+  a{color:var(--accent)}
+  a:hover{color:var(--accent-soft)}
+
+  .layout{
+    display:grid;
+    grid-template-columns: 300px minmax(0,1fr);
+    max-width: 1320px;
+    margin: 0 auto;
+    align-items:start;
+  }
+
+  /* ---------- sidebar ---------- */
+  aside{
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    padding: 44px 28px 44px 40px;
+    border-right: 1px solid var(--rule);
+  }
+  .brand{
+    font-family:"Fraunces", serif;
+    font-weight:700;
+    font-size:1.05rem;
+    line-height:1.3;
+    letter-spacing:-0.01em;
+    margin:0 0 6px;
+  }
+  .brand small{
+    display:block;
+    font-family:"JetBrains Mono", monospace;
+    font-weight:500;
+    font-size:.62rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:10px;
+  }
+  .meta{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    line-height:1.9;
+    margin: 18px 0 30px;
+    padding-top:18px;
+    border-top:1px solid var(--rule);
+  }
+  .meta .status{
+    display:inline-block;
+    color:var(--teal);
+    font-weight:600;
+  }
+  nav.toc{font-size:.86rem}
+  nav.toc .group-label{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.62rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin: 20px 0 8px;
+  }
+  nav.toc .group-label:first-child{margin-top:0}
+  nav.toc ul{list-style:none;margin:0 0 4px;padding:0}
+  nav.toc li a{
+    display:block;
+    padding:5px 0 5px 2px;
+    color:var(--ink);
+    text-decoration:none;
+    border-left: 2px solid transparent;
+    padding-left:12px;
+    margin-left:-2px;
+    transition: border-color .15s ease, color .15s ease, padding-left .15s ease;
+  }
+  nav.toc li a:hover{
+    color:var(--accent);
+    border-left-color:var(--accent-soft);
+    padding-left:16px;
+  }
+  nav.toc li a .n{
+    font-family:"JetBrains Mono", monospace;
+    color:var(--ink-soft);
+    margin-right:8px;
+    font-size:.78em;
+  }
+
+  details.mobile-toc{display:none}
+
+  /* ---------- main ---------- */
+  main{
+    padding: 64px 56px 120px;
+    max-width: 760px;
+  }
+  .kicker{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 14px;
+  }
+  h1.title{
+    font-family:"Fraunces", serif;
+    font-weight:600;
+    font-size: clamp(2.3rem, 4vw, 3.1rem);
+    line-height:1.08;
+    letter-spacing:-0.015em;
+    margin:0 0 20px;
+  }
+  .lede{
+    font-size:1.18rem;
+    color:var(--ink-soft);
+    font-style:italic;
+    max-width:56ch;
+    margin: 0 0 56px;
+    padding-bottom:44px;
+    border-bottom:1px solid var(--rule);
+  }
+
+  .part-divider{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin: 90px 0 40px;
+  }
+  .part-divider .num{
+    font-family:"Fraunces", serif;
+    font-weight:700;
+    font-size:2.4rem;
+    color:var(--accent);
+    line-height:1;
+  }
+  .part-divider .label{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .part-divider h2{
+    font-family:"Fraunces", serif;
+    font-weight:600;
+    font-size:1.5rem;
+    margin:2px 0 0;
+  }
+
+  section.doc-section{
+    margin: 52px 0;
+    position:relative;
+  }
+  section.doc-section h3{
+    font-family:"Fraunces", serif;
+    font-weight:600;
+    font-size:1.5rem;
+    letter-spacing:-.01em;
+    margin: 0 0 18px;
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+  }
+  section.doc-section h3 .sec-n{
+    font-family:"JetBrains Mono", monospace;
+    font-size:1rem;
+    font-weight:500;
+    color:var(--accent);
+  }
+  section.doc-section h4{
+    font-family:"Fraunces", serif;
+    font-weight:600;
+    font-size:1.12rem;
+    margin: 30px 0 12px;
+  }
+  section.doc-section p{margin: 0 0 18px}
+  section.doc-section ul, section.doc-section ol{margin:0 0 20px; padding-left:1.3em}
+  section.doc-section li{margin-bottom:9px}
+  section.doc-section li::marker{color:var(--accent-soft)}
+
+  code, .attr{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.86em;
+    background: var(--paper-deep);
+    padding:.12em .4em;
+    border-radius:3px;
+    color:var(--teal);
+  }
+
+  .callout{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    border-radius: 3px;
+    padding: 18px 22px;
+    margin: 24px 0;
+    font-size:.96rem;
+    box-shadow:var(--shadow);
+  }
+  .callout.resolved{border-left-color:var(--teal)}
+  .callout .tag{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.65rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:block;
+    margin-bottom:8px;
+  }
+  .callout.resolved .tag{color:var(--teal)}
+  .callout p{margin:0 0 8px}
+  .callout p:last-child{margin-bottom:0}
+
+  .raci{
+    width:100%;
+    border-collapse:collapse;
+    margin: 20px 0 28px;
+    font-size:.92rem;
+  }
+  .raci th, .raci td{
+    text-align:left;
+    padding:10px 14px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  .raci th{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.68rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .raci td.role{font-weight:600; color:var(--teal); white-space:nowrap}
+
+  .phase-list{counter-reset:phase}
+  .phase-list li{
+    list-style:none;
+    counter-increment: phase;
+    position:relative;
+    padding-left: 2.4em;
+    margin-bottom:16px;
+  }
+  .phase-list li::before{
+    content: counter(phase);
+    position:absolute;
+    left:0; top:-2px;
+    font-family:"Fraunces", serif;
+    font-weight:700;
+    font-size:1.1rem;
+    color:var(--accent);
+    width:1.7em;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:"JetBrains Mono", monospace;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:100px;
+    background:rgba(47,93,83,.12);
+    color:var(--teal);
+    margin-bottom:10px;
+  }
+  .status-pill::before{content:"●"; font-size:.6rem}
+
+  footer.doc-footer{
+    margin-top:100px;
+    padding-top:28px;
+    border-top:1px solid var(--rule);
+    font-family:"JetBrains Mono", monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    line-height:1.9;
+  }
+
+  ::selection{background: var(--accent-soft); color:#fff}
+
+  @media (max-width: 980px){
+    .layout{grid-template-columns: 1fr}
+    aside{
+      position:static;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--rule);
+      padding: 28px 24px;
+    }
+    nav.toc{display:none}
+    details.mobile-toc{display:block}
+    details.mobile-toc summary{
+      cursor:pointer;
+      font-family:"JetBrains Mono", monospace;
+      font-size:.72rem;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--accent);
+      padding:10px 0;
+    }
+    details.mobile-toc nav.toc{display:block; margin-top:8px}
+    main{padding: 40px 24px 90px}
+    h1.title{font-size:2rem}
+    .part-divider{margin:60px 0 28px}
+  }
+  @media (max-width: 480px){
+    body{font-size:16.5px}
+    main{padding:32px 18px 70px}
+    .raci{font-size:.82rem}
+    .raci th, .raci td{padding:8px 8px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside>
+  <p class="brand">
+    <small>Dossier d'architecture</small>
+    IAM<br>Onboarding / Offboarding
+  </p>
+  <div class="meta">
+    <span class="status">● cadrage clos</span><br>
+    Entra ID Governance (P2)<br>
+    Mis à jour : 21/09/2026
+  </div>
+
+  <details class="mobile-toc">
+    <summary>Sommaire</summary>
+    <nav class="toc" id="toc-mobile"></nav>
+  </details>
+
+  <nav class="toc" id="toc-desktop">
+    <p class="group-label">Partie A — DA</p>
+    <ul>
+      <li><a href="#a1"><span class="n">1</span>Contexte / enjeux</a></li>
+      <li><a href="#a2"><span class="n">2</span>Cadrage recueilli</a></li>
+      <li><a href="#a3"><span class="n">3</span>Architecture cible</a></li>
+      <li><a href="#a4"><span class="n">4</span>Flux &amp; RACI</a></li>
+      <li><a href="#a5"><span class="n">5</span>Composants</a></li>
+      <li><a href="#a6"><span class="n">6</span>Risques / limites</a></li>
+      <li><a href="#a7"><span class="n">7</span>Conformité</a></li>
+      <li><a href="#a8"><span class="n">8</span>Plan par phases</a></li>
+      <li><a href="#a9"><span class="n">9</span>Coûts</a></li>
+    </ul>
+    <p class="group-label">Partie B — Phase 1</p>
+    <ul>
+      <li><a href="#b1"><span class="n">1</span>Pourquoi ce bloc</a></li>
+      <li><a href="#b2"><span class="n">2</span>Prérequis organisation</a></li>
+      <li><a href="#b3"><span class="n">3</span>Config. technique</a></li>
+      <li><a href="#b4"><span class="n">4</span>Séquence de mise en route</a></li>
+      <li><a href="#b5"><span class="n">5</span>Ouvert</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<main>
+  <p class="kicker">Entra ID · Lifecycle Workflows · Entitlement Management</p>
+  <h1 class="title">Gestion des cycles onboarding, offboarding &amp; mover</h1>
+  <p class="lede">Dossier d'architecture pour une brique IAM de production, construite sur Entra ID —
+  du cadrage à la mise en œuvre de la première phase.</p>
+
+  <!-- ============ PART A : DA ============ -->
+  <div class="part-divider">
+    <span class="num">A</span>
+    <div><div class="label">Dossier d'architecture</div><h2>Cadrage et conception</h2></div>
+  </div>
+
+  <section class="doc-section" id="a1">
+    <h3><span class="sec-n">1</span>Contexte / enjeux</h3>
+    <p>Mettre en place, pour l'entreprise dans laquelle Ronny travaille, une gestion structurée
+    des cycles onboarding / offboarding / mover. La demande initiale — « une sorte de système
+    IAM » — a été précisée au fil de l'échange de cadrage ci-dessous.</p>
+  </section>
+
+  <section class="doc-section" id="a2">
+    <h3><span class="sec-n">2</span>Cadrage recueilli de Ronny</h3>
+    <ul>
+      <li>Brique existante : <span class="attr">Entra ID</span>.</li>
+      <li>Périmètre <strong>global</strong>, avec <strong>gestion des outils</strong> — accès
+      applicatifs tiers, pas seulement l'annuaire.</li>
+      <li>Cible : faire tourner sur un vrai SI — une brique de production réelle, pas un POC.</li>
+      <li>Livrable demandé : une vraie DA pour ce SaaS — un dossier d'architecture formel.</li>
+      <li>Conformité : socle ISO 27001 / SOC2 / RGPD compatible proposé par Victor (moindre
+      privilège, PIM, Access Reviews trimestriels, Conditional Access + MFA dès J0,
+      traçabilité complète).</li>
+    </ul>
+
+    <div class="callout">
+      <span class="tag">Point bloquant levé</span>
+      <p>Un SIRH existe mais <strong>ne peut pas être utilisé</strong> (raison technique,
+      confirmée par Ronny). Conséquence directe : Entra ID devient la source de vérité pour
+      les attributs de cycle de vie (date d'embauche, date de départ…), alimentés
+      <strong>manuellement</strong> côté RH — pas de flux automatique depuis un SIRH tiers.</p>
+    </div>
+
+    <p>En complément explicite des trois blocs natifs Entra, Ronny a demandé une fonction de
+    saisie manuelle des personnes et un système de réconciliation entre ces saisies et l'état
+    réel dans Entra, pour rattraper les écarts (oubli, doublon, date fausse) avant qu'ils ne
+    cassent le déclenchement automatique.</p>
+
+    <div class="callout resolved">
+      <span class="tag">Tranché</span>
+      <p>Pas de pattern natif Entra pour ce cas : le bulk import CSV et l'édition directe
+      d'attributs écrivent tous deux directement dans Entra — une seule source, donc rien à
+      réconcilier entre deux systèmes. C'est un petit outil interne, cadré comme
+      <strong>contrôle détectif</strong> plutôt que comme second canal d'écriture, pour éviter
+      qu'il ne reproduise le même risque de discipline de saisie ailleurs avec un faux
+      sentiment de garde-fou.</p>
+    </div>
+
+    <div class="callout resolved">
+      <span class="tag">Plus de point bloquant</span>
+      <p>Licence <strong>Entra ID Governance (P2)</strong> — confirmée déjà présente au tenant.
+      La section coûts se présente en option unique : aucun comparatif d'acquisition, seule la
+      consommation Azure Logic Apps du bloc 3 reste un coût variable à chiffrer.</p>
+    </div>
+  </section>
+
+  <section class="doc-section" id="a3">
+    <h3><span class="sec-n">3</span>Architecture cible</h3>
+    <p>Quatre blocs : trois natifs Entra ID P2, un outil interne.</p>
+
+    <h4>1 · Birthright — accès automatique sans approbation</h4>
+    <p><span class="attr">Lifecycle Workflows</span>. Triggers sur <span class="attr">employeeHireDate</span>,
+    <span class="attr">employeeLeaveDateTime</span>, <span class="attr">department</span>,
+    <span class="attr">manager</span>. Tâches natives : création de compte, TAP, licences,
+    groupes dynamiques, notification manager/IT, désactivation et révocation des sessions au
+    jour du départ. Dépendance critique : ces triggers reposent sur des attributs saisis à la
+    main par le RH, pas sur un flux amont fiable — documenté comme risque explicite (§6).</p>
+
+    <h4>2 · Accès avec approbation manager</h4>
+    <p><span class="attr">Entitlement Management</span> (Access Packages). Bundles
+    groupes/rôles/sites, demande via My Access, chaîne d'approbation (manager, propriétaire de
+    ressource, multi-étapes), expiration et access review périodique. Pattern retenu : l'accès
+    de base suit le birthright, l'accès élevé ou optionnel passe en self-service avec
+    approbation.</p>
+
+    <h4>3 · Apps tierces</h4>
+    <p>Provisioning <span class="attr">SCIM</span> sortant (App Gallery Entra ou SCIM
+    générique). Les apps sans SCIM passent par une extension Logic App / Function — coût de
+    consommation Azure en plus de la licence P2.</p>
+
+    <h4>4 · Réconciliation saisie RH / Entra — outil interne</h4>
+    <p>Cadré comme contrôle détectif, pas comme second canal d'écriture :</p>
+    <ul>
+      <li>Une source déclarative légère (formulaire ou table simple) où le RH saisit
+      l'intention et la date — embauche, départ.</li>
+      <li>Un job planifié (Azure Function ou script, Microsoft Graph API en lecture seule) qui
+      diffe cette source contre l'état réel des attributs Entra et remonte les écarts — il
+      n'écrit jamais dans Entra à la place du RH.</li>
+    </ul>
+    <p>Raison du choix : le seul mécanisme natif qui ferait ce que Ronny décrit est le
+    HR-driven provisioning d'Entra ID Governance, fermé puisque le SIRH est inutilisable.</p>
+  </section>
+
+  <section class="doc-section" id="a4">
+    <h3><span class="sec-n">4</span>Flux &amp; RACI</h3>
+    <p>Trois cycles de vie, chacun avec ses étapes et sa répartition Responsable / Approbateur
+    / Consulté / Informé — proposée à trois rôles simples (RH, Manager, IT/Sécurité), à
+    confirmer par Ronny selon l'organisation réelle.</p>
+
+    <h4>4.1 Onboarding</h4>
+    <ol>
+      <li>RH saisit la date d'embauche, le département et le manager dans Entra.</li>
+      <li>Lifecycle Workflows déclenche à J-X : création du compte, licences de base, groupes
+      dynamiques, TAP, notification manager et IT.</li>
+      <li>Le collaborateur ou son manager demande, via My Access, les accès complémentaires —
+      chaîne d'approbation (bloc 2).</li>
+      <li>Les apps tierces sont provisionnées par SCIM dès que le compte Entra existe
+      (bloc 3).</li>
+    </ol>
+    <table class="raci">
+      <tr><th>Rôle</th><th>Responsabilité</th></tr>
+      <tr><td class="role">RH</td><td>Responsable — saisie des attributs</td></tr>
+      <tr><td class="role">Manager</td><td>Approbateur des accès complémentaires · Informé à la création du compte</td></tr>
+      <tr><td class="role">IT / Sécurité</td><td>Consulté — paramétrage des workflows et des apps SCIM</td></tr>
+    </table>
+
+    <h4>4.2 Offboarding</h4>
+    <ol>
+      <li>RH saisit la date de départ dans Entra dès qu'elle est connue.</li>
+      <li>Lifecycle Workflows déclenche à J : révocation des sessions actives, désactivation du
+      compte, retrait des groupes et licences.</li>
+      <li>Export SCIM de désactivation vers les apps tierces concernées.</li>
+      <li>Le bloc 4 vérifie, indépendamment, que la date saisie correspond à un compte
+      désactivé dans les délais — filet de sécurité si l'étape 1 a été oubliée.</li>
+    </ol>
+    <table class="raci">
+      <tr><th>Rôle</th><th>Responsabilité</th></tr>
+      <tr><td class="role">RH</td><td>Responsable — saisie de la date</td></tr>
+      <tr><td class="role">IT / Sécurité</td><td>Approbateur des cas particuliers (ex. rétention légale de la boîte mail)</td></tr>
+      <tr><td class="role">Manager</td><td>Informé du départ effectif</td></tr>
+    </table>
+
+    <h4>4.3 Mover — changement de poste ou de département</h4>
+    <ol>
+      <li>RH ou manager met à jour l'attribut département / poste dans Entra.</li>
+      <li>Les groupes dynamiques se recalculent automatiquement.</li>
+    </ol>
+    <div class="callout">
+      <span class="tag">Point de vigilance</span>
+      <p>Le recalcul ajoute les nouveaux accès mais ne retire pas nécessairement les anciens si
+      le scoping des groupes n'est pas strict. Mitigation retenue : un Access Review
+      trimestriel dédié aux movers, où le nouveau manager confirme ou révoque les accès hérités
+      de l'ancien poste.</p>
+    </div>
+    <table class="raci">
+      <tr><th>Rôle</th><th>Responsabilité</th></tr>
+      <tr><td class="role">RH / Manager</td><td>Responsable — mise à jour de l'attribut</td></tr>
+      <tr><td class="role">Nouveau manager</td><td>Approbateur — Access Review des accès hérités</td></tr>
+      <tr><td class="role">IT / Sécurité</td><td>Consulté — scoping des groupes</td></tr>
+    </table>
+
+    <h4>4.4 Bloc 4 — cadence et alerte</h4>
+    <p>Le job de réconciliation tourne <strong>quotidiennement</strong>, hors heures ouvrées :
+    il compare la source déclarative RH et l'état réel Entra, et liste les écarts (saisie
+    manquante, date incohérente, compte non désactivé alors que la date de départ est passée).
+    Destination de l'alerte : IT/Sécurité, par le même canal que les autres alertes d'infra —
+    sans destinataire clair, ce contrôle détectif existe sur le papier mais personne ne le
+    regarde.</p>
+  </section>
+
+  <section class="doc-section" id="a5">
+    <h3><span class="sec-n">5</span>Composants</h3>
+    <p>Lifecycle Workflows, Entitlement Management, SCIM par application, Logic Apps / Functions
+    pour l'extensibilité, PIM pour les comptes admin, Conditional Access, Access Reviews,
+    export des logs vers SIEM / Log Analytics.</p>
+  </section>
+
+  <section class="doc-section" id="a6">
+    <h3><span class="sec-n">6</span>Risques / limites</h3>
+    <ul>
+      <li>Pas d'approbation intégrée aux Lifecycle Workflows — d'où le bloc 2 séparé.</li>
+      <li>Une vingtaine de tâches natives seulement ; ticketing ITSM et apps non-SCIM passent
+      par des Logic Apps custom, donc du code à maintenir.</li>
+      <li>Mover mal scopé → droits obsolètes non retirés (voir §4.3).</li>
+      <li>Couverture SCIM de la galerie Entra bonne mais pas universelle → réconciliation
+      manuelle probable sur certains outils métier.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Risque central</span>
+      <p>SIRH inutilisable → Entra devient source de vérité alimentée manuellement : la
+      discipline de saisie RH est une dépendance critique du bloc birthright. Un retard ou une
+      erreur de saisie retarde ou bloque le déclenchement automatique de tout le cycle de vie.
+      <strong>Mitigation retenue</strong> : le bloc 4 ne supprime pas ce risque, il le rend
+      visible.</p>
+    </div>
+  </section>
+
+  <section class="doc-section" id="a7">
+    <h3><span class="sec-n">7</span>Conformité</h3>
+    <p>Socle ISO 27001 / SOC2 / RGPD : moindre privilège, PIM sur les comptes admin, Access
+    Reviews trimestriels comme preuve d'audit, Conditional Access + MFA dès J0, traçabilité
+    complète — logs Lifecycle Workflows et audit Entra, export SIEM, rétention au-delà de 30
+    jours.</p>
+  </section>
+
+  <section class="doc-section" id="a8">
+    <h3><span class="sec-n">8</span>Plan de mise en œuvre par phases</h3>
+    <p>Découpage par valeur livrée dès la phase 1, plutôt que par risque :</p>
+    <ol class="phase-list">
+      <li><strong>Birthright</strong> (bloc 1) — le socle : création et désactivation
+      automatique des comptes. Résout le point le plus critique — l'offboarding manqué — et ne
+      dépend d'aucun autre bloc.</li>
+      <li><strong>Réconciliation</strong> (bloc 4) — mise en place en parallèle de la phase 1
+      dès que la saisie RH démarre, pour ne jamais faire tourner le birthright sans son filet
+      de sécurité.</li>
+      <li><strong>Entitlement Management</strong> (bloc 2) — demandes d'accès avec approbation
+      manager, une fois le socle stable.</li>
+      <li><strong>SCIM apps tierces</strong> (bloc 3) — au fil de l'eau, en commençant par les
+      apps déjà dans l'App Gallery Entra.</li>
+      <li><strong>Durcissement conformité</strong> — PIM, Access Reviews trimestriels, export
+      SIEM : en continu dès la phase 1, pas repoussé à la fin.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="a9">
+    <h3><span class="sec-n">9</span>Coûts</h3>
+    <p>Licence Entra ID Governance (P2) déjà présente au tenant — pas de coût d'acquisition à
+    chiffrer pour les blocs 1, 2 et 4. Coût variable restant : consommation Azure Logic
+    Apps/Functions pour les apps tierces sans SCIM natif (bloc 3) et pour l'outil de
+    réconciliation (bloc 4) — à chiffrer une fois le périmètre d'apps tierces connu.</p>
+  </section>
+
+  <!-- ============ PART B : Phase 1 guide ============ -->
+  <div class="part-divider">
+    <span class="num">B</span>
+    <div><div class="label">Guide de mise en œuvre</div><h2>Phase 1 — Birthright</h2></div>
+  </div>
+
+  <section class="doc-section" id="b1">
+    <h3><span class="sec-n">1</span>Pourquoi commencer par ce bloc</h3>
+    <p>C'est le flux qui couvre le risque le plus critique du dossier : l'offboarding manqué,
+    un compte encore actif après un départ. Il ne dépend d'aucun autre bloc — contrairement à
+    l'Entitlement Management, qui a besoin de comptes existants, ou au SCIM apps tierces, qui a
+    besoin du compte Entra comme point d'ancrage.</p>
+  </section>
+
+  <section class="doc-section" id="b2">
+    <h3><span class="sec-n">2</span>Prérequis avant de configurer quoi que ce soit</h3>
+    <p>Ces points bloquent la mise en route s'ils ne sont pas réglés — à vérifier avec Ronny
+    avant toute configuration :</p>
+    <ol>
+      <li><strong>Attributs RH fiables dans Entra.</strong> Avant d'activer les triggers, il
+      faut que <span class="attr">employeeHireDate</span>, <span class="attr">employeeLeaveDateTime</span>,
+      <span class="attr">department</span> et <span class="attr">manager</span> soient remplis
+      pour au moins la première cohorte pilote — sinon les workflows ne se déclenchent jamais
+      ou se déclenchent sur des données vides.</li>
+      <li><strong>Qui saisit ces attributs, concrètement.</strong> Le dossier identifie le RH
+      comme Responsable mais ne nomme personne. Question à poser à Ronny : qui, nommément,
+      aura les droits d'édition sur ces attributs dans Entra — un rôle délégué, pas Global
+      Admin ?</li>
+      <li><strong>Fenêtre de test.</strong> Lifecycle Workflows peut tourner en mode simulation
+      — dry-run, sans exécution réelle des tâches — avant activation, pour valider les triggers
+      sur la cohorte pilote sans risque.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="b3">
+    <h3><span class="sec-n">3</span>Configuration technique</h3>
+
+    <div class="callout">
+      <span class="tag">Prérequis licence — bloquant</span>
+      <p>Lifecycle Workflows fait partie d'Entra ID Governance (add-on P1/P2, ou Entra Suite).
+      Sans cette licence, aucune des tâches natives ci-dessous n'est disponible. Corollaire :
+      Conditional Access nécessite au minimum Entra ID P1, déjà couvert si M365 Business
+      Premium ou E3/E5.</p>
+    </div>
+
+    <h4>Déclencheurs</h4>
+    <p>Trigger sur les attributs <span class="attr">employeeHireDate</span> /
+    <span class="attr">employeeLeaveDateTime</span> plutôt que déclenchement manuel ou planifié
+    seul. Sans connecteur RH automatisé (Workday/SuccessFactors — absent chez Ronny à ce
+    stade), ces deux attributs doivent être saisis à la main à la création du compte : un vrai
+    prérequis de <em>process</em>, pas seulement technique, à mettre dans le RACI. Fenêtre
+    pré-embauche configurable (ex. J-5) pour lancer les tâches de préparation avant le jour J.</p>
+
+    <h4>Tâches natives à activer</h4>
+    <p><strong>Pré-embauche (J-5 à J-1)</strong> — Generate TAP · Send welcome email au manager
+    · Request user access package assignment.</p>
+    <p><strong>Jour J</strong> — Add to groups · Add to Teams · Assign licenses · Enable
+    account · Generate TAP ou envoi mot de passe au manager (l'un ou l'autre, pas les deux) ·
+    Run a Custom Task Extension.</p>
+    <p><strong>Départ</strong> — Remove from groups/Teams · Remove licenses · Disable account ·
+    Revoke all sessions · Cancel Teams meetings · Convert mailbox to shared · Backup OneDrive ·
+    Remove from org chart · Delete user (tâche séparée, à échéance de rétention).</p>
+
+    <h4>Hors périmètre natif</h4>
+    <p>Nécessite une extension (Custom Task Extension / Logic App) : apps tierces sans
+    provisioning SCIM, matériel (badge, laptop, ITSM), approbation multi-niveaux — qui relève
+    d'Entitlement Management, pas de Lifecycle Workflows — et toute notification à un tiers
+    hors Entra.</p>
+
+    <h4>Conditional Access / MFA — à poser dès J0</h4>
+    <ul>
+      <li>Compte de secours (break-glass) exclu de toute policy CA, créé et documenté avant la
+      première policy.</li>
+      <li>Authentication Methods : activer TAP, condition de la tâche « Generate TAP ».</li>
+      <li>Policy CA baseline : MFA pour tous (hors break-glass), blocage de l'authentification
+      legacy, MFA sur les rôles admin.</li>
+      <li>SSPR activé — évite un aller-retour support pour un mot de passe oublié dès J1.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Point RACI</span>
+      <p>La policy CA n'est pas dans le périmètre Lifecycle Workflows : elle doit être en place
+      avant le premier run du workflow, sinon le compte fraîchement créé hérite d'un tenant
+      sans garde-fou MFA. Traitée comme prérequis bloquant de la Phase 1.</p>
+    </div>
+  </section>
+
+  <section class="doc-section" id="b4">
+    <h3><span class="sec-n">4</span>Séquence de mise en route proposée</h3>
+    <ol class="phase-list">
+      <li>Ronny confirme le responsable RH nommé et la cohorte pilote — un service ou petit
+      groupe, pas toute l'entreprise d'un coup.</li>
+      <li>Configuration de Lifecycle Workflows en mode simulation sur la cohorte pilote.</li>
+      <li>Vérification conjointe des logs de simulation avant tout passage en exécution
+      réelle.</li>
+      <li>Activation réelle sur la cohorte pilote, avec le bloc 4 démarré en parallèle dès
+      cette étape — pas après.</li>
+      <li>Extension progressive au reste de l'organisation une fois la cohorte pilote
+      stable.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="b5">
+    <h3><span class="sec-n">5</span>Ce qui reste ouvert</h3>
+    <ul>
+      <li>Nom du responsable RH — à confirmer par Ronny.</li>
+      <li>Taille et périmètre de la cohorte pilote — proposition : un service réduit, 5 à 10
+      personnes, pour limiter le risque pendant la simulation.</li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    Dossier rédigé par Camille (cadrage, flux, RACI, mise en forme) et Victor (architecture
+    cible, sécurité, configuration technique) pour Ronny.<br>
+    Version de travail — dernière mise à jour 21/09/2026.
+  </footer>
+</main>
+</div>
+<script>
+  document.getElementById('toc-mobile').innerHTML = document.getElementById('toc-desktop').innerHTML;
+</script>
+</body>
+</html>
