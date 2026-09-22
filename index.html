@@ -302,6 +302,72 @@
   }
   .status-pill::before{content:"●"; font-size:.6rem}
 
+  .report-summary{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    margin: 24px 0 32px;
+    padding: 20px 24px;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    box-shadow:var(--shadow);
+  }
+  .report-summary .stat{font-family:"JetBrains Mono", monospace}
+  .report-summary .stat .v{
+    display:block;
+    font-family:"Fraunces", serif;
+    font-size:1.7rem;
+    font-weight:700;
+    color:var(--ink);
+    line-height:1.1;
+  }
+  .report-summary .stat .l{
+    font-size:.66rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .discrepancy{
+    border:1px solid var(--rule);
+    border-left:4px solid var(--ink-soft);
+    border-radius:3px;
+    background:var(--card);
+    padding:16px 20px;
+    margin:0 0 14px;
+    box-shadow:var(--shadow);
+  }
+  .discrepancy.sev-critique{border-left-color:var(--accent)}
+  .discrepancy.sev-attention{border-left-color:var(--amber)}
+  .discrepancy.sev-info{border-left-color:var(--teal)}
+  .discrepancy .sev-tag{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.64rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:8px;
+  }
+  .discrepancy.sev-critique .sev-tag{color:var(--accent)}
+  .discrepancy.sev-attention .sev-tag{color:var(--amber)}
+  .discrepancy.sev-info .sev-tag{color:var(--teal)}
+  .discrepancy .sev-tag::before{content:"●"; font-size:.6rem}
+  .discrepancy .msg{margin:0; font-size:.96rem}
+  .discrepancy .type{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.7rem;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+  .report-note{
+    font-family:"JetBrains Mono", monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    margin: -8px 0 28px;
+  }
+
   footer.doc-footer{
     margin-top:100px;
     padding-top:28px;
@@ -358,7 +424,7 @@
   <div class="meta">
     <span class="status">● cadrage clos</span><br>
     Entra ID Governance (P2)<br>
-    Mis à jour : 21/09/2026
+    Mis à jour : 22/09/2026
   </div>
 
   <details class="mobile-toc">
@@ -402,6 +468,15 @@
       <li><a href="#d3"><span class="n">3</span>Config. technique</a></li>
       <li><a href="#d4"><span class="n">4</span>Séquence de mise en route</a></li>
       <li><a href="#d5"><span class="n">5</span>Décisions par défaut</a></li>
+    </ul>
+    <p class="group-label">Partie E — Phase 4</p>
+    <ul>
+      <li><a href="#e1"><span class="n">1</span>Un rôle différent</a></li>
+      <li><a href="#e2"><span class="n">2</span>Ce qui a été construit</a></li>
+      <li><a href="#e3"><span class="n">3</span>Anomalies détectées</a></li>
+      <li><a href="#e4"><span class="n">4</span>Rapport — lecture</a></li>
+      <li><a href="#e5"><span class="n">5</span>Exécution planifiée</a></li>
+      <li><a href="#e6"><span class="n">6</span>Décisions par défaut</a></li>
     </ul>
   </nav>
 </aside>
@@ -988,15 +1063,151 @@
     </ul>
   </section>
 
+  <!-- ============ PART E : Phase 4 guide ============ -->
+  <div class="part-divider">
+    <span class="num">E</span>
+    <div><div class="label">Guide de mise en œuvre</div><h2>Phase 4 — Réconciliation</h2></div>
+  </div>
+
+  <section class="doc-section" id="e1">
+    <h3><span class="sec-n">1</span>Un rôle différent des trois précédents</h3>
+    <p>Les blocs 1 à 3 <strong>agissent</strong> (créent, activent, propagent, désactivent). Le
+    bloc 4 n'agit jamais — il <strong>observe et compare</strong>. Un Lifecycle Workflow qui échoue
+    silencieusement sur une fiche mal renseignée, un compte désactivé à la main sans le signaler,
+    un compte fantôme jamais rattaché à une fiche RH : aucun des blocs 1 à 3 ne détecte ses propres
+    pannes. Ce bloc est construit spécifiquement pour ça.</p>
+    <div class="callout resolved">
+      <span class="tag">Garde-fou</span>
+      <p>Il n'écrit jamais dans Entra. Seuls des appels <span class="attr">GET /users</span> en
+      lecture Microsoft Graph sont émis — décidé au cadrage (DA §4) et vérifié dans le code : le
+      client Graph n'expose aucune méthode d'écriture.</p>
+    </div>
+  </section>
+
+  <section class="doc-section" id="e2">
+    <h3><span class="sec-n">2</span>Ce qui a été construit</h3>
+    <p>Outil en ligne de commande, dépôt privé <span class="attr">vodky-bot/iam-reconciliation-tool</span> :</p>
+    <ul>
+      <li><strong>Moteur de réconciliation pur</strong> — aucun appel réseau, testable sans tenant
+      réel, 23 tests unitaires couvrant chaque type d'anomalie et ses cas limites (délais de
+      grâce, écarts de date, comptes orphelins).</li>
+      <li><strong>Source RH</strong> : CSV avec un format documenté (matricule, nom, prénom, email
+      attendu, date d'embauche, date de départ).</li>
+      <li><strong>Client Entra en lecture seule</strong> : application dédiée, permission
+      <span class="attr">User.Read.All</span>, isolée derrière une interface pour rester testable
+      sans connexion réelle.</li>
+      <li><strong>Alerte</strong> : si un webhook est renseigné, les anomalies critiques y sont
+      envoyées (format Teams/Slack), avec retry et backoff exponentiel sur échec réseau.</li>
+      <li><strong>Code de sortie exploitable par un cron</strong> : 0 rien à signaler, 1 au moins
+      une anomalie critique, 2 échec technique (config invalide, Graph injoignable).</li>
+    </ul>
+  </section>
+
+  <section class="doc-section" id="e3">
+    <h3><span class="sec-n">3</span>Anomalies détectées</h3>
+    <table class="raci">
+      <tr><th>Type</th><th>Sévérité</th><th>Signification</th></tr>
+      <tr><td class="role">COMPTE_NON_DESACTIVE</td><td>critique</td><td>Départ RH passé, compte Entra toujours actif</td></tr>
+      <tr><td class="role">ABSENT_DANS_RH (actif)</td><td>critique</td><td>Compte Entra actif sans fiche RH — orphelin à risque</td></tr>
+      <tr><td class="role">ABSENT_DANS_ENTRA</td><td>critique</td><td>Embauche RH passée, aucun compte Entra créé</td></tr>
+      <tr><td class="role">COMPTE_NON_ACTIVE</td><td>attention</td><td>Embauche RH passée, compte encore désactivé</td></tr>
+      <tr><td class="role">ABSENT_DANS_RH (désactivé)</td><td>attention</td><td>Compte désactivé sans fiche RH — à nettoyer</td></tr>
+      <tr><td class="role">DATE_INCOHERENTE</td><td>info</td><td>Écart de date RH/Entra au-delà de la tolérance configurée</td></tr>
+    </table>
+    <p>Des délais de grâce évitent de signaler à tort un compte encore en cours de provisioning
+    normal.</p>
+  </section>
+
+  <section class="doc-section" id="e4">
+    <h3><span class="sec-n">4</span>Rapport — lecture</h3>
+    <p>Le rapport complet sort en JSON sur stdout, pensé pour un cron quotidien — pas pour être lu
+    à l'œil chaque jour. C'est volontaire : ce bloc est un filet de sécurité, l'alerte webhook
+    couvre déjà le cas « quelque chose ne va pas, quelqu'un doit le voir vite ». Ce qui manquait —
+    et qu'un humain qui reçoit une alerte veut pouvoir consulter sans lire du JSON brut — c'est
+    cette page de lecture du dernier rapport.</p>
+    <p class="report-note">Démonstration ci-dessous : produite en exécutant le vrai moteur de
+    réconciliation du dépôt sur le CSV d'exemple fourni et un état Entra synthétique construit pour
+    illustrer chaque type d'anomalie — pas des chiffres inventés à la main. Généré le 22/09/2026.</p>
+    <div class="report-summary" id="report-summary"></div>
+    <div id="report-list"></div>
+  </section>
+
+  <section class="doc-section" id="e5">
+    <h3><span class="sec-n">5</span>Exécution planifiée</h3>
+    <ol class="phase-list">
+      <li>Renseigner <span class="attr">.env</span> (identifiants Entra, URL de webhook si un
+      canal d'alerte existe déjà côté IT).</li>
+      <li>Brancher <span class="attr">npm start</span> sur un cron quotidien hors heures
+      ouvrées.</li>
+      <li>Le code de sortie déclenche l'échec du job (et donc une notification côté
+      orchestrateur) en plus ou à la place du webhook intégré.</li>
+      <li>Publier le JSON produit à l'emplacement que lira cette page de rapport, ou adapter la
+      page vers le stockage retenu — décision d'infrastructure à prendre avec Victor selon où
+      tourne le cron.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="e6">
+    <h3><span class="sec-n">6</span>Décisions prises par défaut</h3>
+    <ul>
+      <li><strong>Pas de dashboard temps réel</strong> : un JSON + webhook + page de lecture du
+      dernier rapport suffit à ce stade — un vrai historique de tendance se justifiera seulement
+      si le volume d'écarts devient difficile à suivre report par report.</li>
+      <li><strong>CSV comme source RH</strong> plutôt qu'une connexion directe au SIRH : cohérent
+      avec la décision déjà actée au DA (SIRH existant mais inutilisable, saisie manuelle côté RH
+      pour les blocs 1-3).</li>
+      <li><strong>Cron quotidien hors heures ouvrées</strong> par défaut, ajustable selon le
+      volume de mouvements RH réel une fois en production.</li>
+    </ul>
+  </section>
+
   <footer class="doc-footer">
     Dossier rédigé par Camille (cadrage, flux, RACI, mise en forme) et Victor (architecture
     cible, sécurité, configuration technique) pour Ronny.<br>
-    Version de travail — dernière mise à jour 21/09/2026.
+    Version de travail — dernière mise à jour 22/09/2026.
   </footer>
 </main>
 </div>
 <script>
   document.getElementById('toc-mobile').innerHTML = document.getElementById('toc-desktop').innerHTML;
+</script>
+<script>
+(function(){
+  var report = {
+    "genereLe": "2026-09-22",
+    "nombreFichesRh": 3,
+    "nombreComptesEntra": 3,
+    "discrepancies": [
+      {"type":"DATE_INCOHERENTE","severity":"info","matricule":"M001","message":"Alice Durand (M001) : date d'embauche RH 2026-09-01 vs Entra 2026-09-05 — écart de 4j"},
+      {"type":"COMPTE_NON_DESACTIVE","severity":"critique","matricule":"M002","message":"Bob Martin (M002) : départ RH le 2026-09-15, compte Entra bob.martin@example.com toujours ACTIF 7 jours après"},
+      {"type":"ABSENT_DANS_ENTRA","severity":"critique","matricule":"M003","message":"Claire Petit (M003) : embauche RH le 2026-09-18, aucun compte Entra 4 jours après — au-delà du délai de grâce (3j)"},
+      {"type":"ABSENT_DANS_RH","severity":"critique","matricule":"M999","message":"compte Entra compte.oublie@example.com (matricule M999) sans fiche RH correspondante — compte ACTIF, orphelin à risque"}
+    ]
+  };
+  var counts = {critique:0, attention:0, info:0};
+  report.discrepancies.forEach(function(d){ counts[d.severity] = (counts[d.severity]||0) + 1; });
+  var summary = document.getElementById('report-summary');
+  var stats = [
+    ['Fiches RH', report.nombreFichesRh],
+    ['Comptes Entra', report.nombreComptesEntra],
+    ['Critiques', counts.critique],
+    ['Attention', counts.attention],
+    ['Info', counts.info]
+  ];
+  summary.innerHTML = stats.map(function(s){
+    return '<span class="stat"><span class="v">'+s[1]+'</span><span class="l">'+s[0]+'</span></span>';
+  }).join('');
+  var order = {critique:0, attention:1, info:2};
+  var sorted = report.discrepancies.slice().sort(function(a,b){ return order[a.severity]-order[b.severity]; });
+  var list = document.getElementById('report-list');
+  list.innerHTML = sorted.map(function(d){
+    return '<div class="discrepancy sev-'+d.severity+'">'
+      + '<span class="sev-tag">'+d.severity+'</span>'
+      + '<p class="msg">'+d.message+'</p>'
+      + '<p class="type">'+d.type+' · matricule '+d.matricule+'</p>'
+      + '</div>';
+  }).join('');
+})();
 </script>
 </body>
 </html>
