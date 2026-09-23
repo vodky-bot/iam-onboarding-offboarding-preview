@@ -266,6 +266,11 @@
     font-weight:500;
   }
   .raci td.role{font-weight:600; color:var(--teal); white-space:nowrap}
+  .raci.licences th:first-child{width:4.6em; white-space:nowrap; word-break:normal}
+  .raci.licences td.role{text-align:center}
+  .meta .status.ouvert{color:var(--amber)}
+  .raci.licences td:last-child{width:34%}
+  p.source{font-size:.8rem; color:var(--ink-soft); margin:-14px 0 24px}
 
   .phase-list{counter-reset:phase}
   .phase-list li{
@@ -423,9 +428,9 @@
     IAM<br>Onboarding / Offboarding
   </p>
   <div class="meta">
-    <span class="status">● cadrage clos</span><br>
-    Entra ID Governance (P2)<br>
-    Mis à jour : 22/09/2026
+    <span class="status ouvert">● licence à vérifier</span><br>
+    Entra ID P1 · P2 · Governance<br>
+    Mis à jour : 23/09/2026
   </div>
 
   <details class="mobile-toc">
@@ -519,7 +524,9 @@
       <p>Un SIRH existe mais <strong>ne peut pas être utilisé</strong> (raison technique,
       confirmée par Ronny). Conséquence directe : Entra ID devient la source de vérité pour
       les attributs de cycle de vie (date d'embauche, date de départ…), alimentés
-      <strong>manuellement</strong> côté RH — pas de flux automatique depuis un SIRH tiers.</p>
+      <strong>manuellement</strong> côté RH — pas de flux automatique depuis un SIRH tiers.
+      Depuis le 23/09, cette saisie se fait dans une table RH poussée vers Entra par API, et
+      non plus directement dans Entra (§3, bloc 4).</p>
     </div>
 
     <p>En complément explicite des trois blocs natifs Entra, Ronny a demandé une fonction de
@@ -528,26 +535,30 @@
     cassent le déclenchement automatique.</p>
 
     <div class="callout resolved">
-      <span class="tag">Tranché</span>
-      <p>Pas de pattern natif Entra pour ce cas : le bulk import CSV et l'édition directe
-      d'attributs écrivent tous deux directement dans Entra — une seule source, donc rien à
-      réconcilier entre deux systèmes. C'est un petit outil interne, cadré comme
-      <strong>contrôle détectif</strong> plutôt que comme second canal d'écriture, pour éviter
-      qu'il ne reproduise le même risque de discipline de saisie ailleurs avec un faux
-      sentiment de garde-fou.</p>
+      <span class="tag">Révisé le 23/09</span>
+      <p>La version du 22/09 disait qu'aucun mécanisme natif Entra ne couvrait ce cas. C'était
+      faux : Microsoft propose l'<strong>API-driven inbound provisioning</strong>, dès la licence
+      P1, pour « n'importe quel système de référence », y compris « a spreadsheet, or SQL
+      tables ». Le RH remplit une table ; un job la pousse vers Entra ; le service crée,
+      met à jour ou désactive le compte. Plus personne ne saisit à la main dans Entra : on
+      prévient l'erreur au lieu de la détecter après coup. L'outil de réconciliation reste,
+      en appui (§3, bloc 4).</p>
     </div>
 
-    <div class="callout resolved">
-      <span class="tag">Plus de point bloquant</span>
-      <p>Licence <strong>Entra ID Governance (P2)</strong> — confirmée déjà présente au tenant.
-      La section coûts se présente en option unique : aucun comparatif d'acquisition, seule la
-      consommation Azure Logic Apps du bloc 3 reste un coût variable à chiffrer.</p>
+    <div class="callout">
+      <span class="tag">Point rouvert — licence</span>
+      <p>« Governance (P2) » désignait deux produits distincts. <strong>Entra ID P2</strong> est
+      inclus dans Microsoft 365 E5 ; <strong>Entra ID Governance</strong> est un complément
+      vendu à part. Lifecycle Workflows (bloc 1) exige Governance ou Entra Suite — P2 seul ne
+      suffit pas. Le « oui, déjà présente » du 21/09 répondait à une question qui mélangeait
+      les deux : il reste à vérifier lequel est au tenant (§3, licences ; §9).</p>
     </div>
   </section>
 
   <section class="doc-section" id="a3">
     <h3><span class="sec-n">3</span>Architecture cible</h3>
-    <p>Quatre blocs : trois natifs Entra ID P2, un outil interne.</p>
+    <p>Quatre blocs natifs Entra, plus un contrôle interne en appui du quatrième. La licence
+    minimale n'est pas la même d'un bloc à l'autre — tableau en fin de section.</p>
 
     <h4>1 · Birthright — accès automatique sans approbation</h4>
     <p><span class="attr">Lifecycle Workflows</span>. Triggers sur <span class="attr">employeeHireDate</span>,
@@ -567,19 +578,36 @@
     <h4>3 · Apps tierces</h4>
     <p>Provisioning <span class="attr">SCIM</span> sortant (App Gallery Entra ou SCIM
     générique). Les apps sans SCIM passent par une extension Logic App / Function — coût de
-    consommation Azure en plus de la licence P2.</p>
+    consommation Azure en plus de la licence.</p>
 
-    <h4>4 · Réconciliation saisie RH / Entra — outil interne</h4>
-    <p>Cadré comme contrôle détectif, pas comme second canal d'écriture :</p>
+    <h4>4 · Saisie RH → Entra : écriture par API, contrôle en appui</h4>
     <ul>
-      <li>Une source déclarative légère (formulaire ou table simple) où le RH saisit
-      l'intention et la date — embauche, départ.</li>
-      <li>Un job planifié (Azure Function ou script, Microsoft Graph API en lecture seule) qui
-      diffe cette source contre l'état réel des attributs Entra et remonte les écarts — il
-      n'écrit jamais dans Entra à la place du RH.</li>
+      <li><strong>Voie native : <span class="attr">API-driven inbound provisioning</span></strong>
+      (licence P1). Le RH saisit l'embauche ou le départ dans une table — Excel sur SharePoint
+      ou Azure SQL. Un job (PowerShell ou Logic App) pousse la table vers l'API
+      <span class="attr">/bulkUpload</span> ; le service de provisioning crée, met à jour ou
+      désactive le compte et pose <span class="attr">employeeHireDate</span> /
+      <span class="attr">employeeLeaveDateTime</span>, les attributs qui déclenchent le bloc 1.
+      Une seule porte d'écriture, journalisée dans les provisioning logs.</li>
+      <li><strong>Contrôle en appui</strong> (Microsoft Graph en lecture seule, quotidien) : il
+      remonte ce que la voie native ne voit pas — un compte modifié directement dans Entra hors
+      de la table, un enregistrement rejeté par le provisioning et resté sans suite. C'est
+      l'outil de réconciliation déjà construit (Phase 4).</li>
     </ul>
-    <p>Raison du choix : le seul mécanisme natif qui ferait ce que Ronny décrit est le
-    HR-driven provisioning d'Entra ID Governance, fermé puisque le SIRH est inutilisable.</p>
+    <p class="source">Source : <a href="https://learn.microsoft.com/entra/identity/app-provisioning/inbound-provisioning-api-concepts">Microsoft Learn — API-driven inbound provisioning concepts</a>.</p>
+
+    <h4>Licences : ce qui exige vraiment Governance</h4>
+    <table class="raci licences">
+      <tr><th>Bloc</th><th>Brique</th><th>Licence minimale</th></tr>
+      <tr><td class="role">1</td><td>Lifecycle Workflows (et extensions Logic Apps)</td><td><strong>Entra ID Governance</strong> ou Entra Suite — P2 seul ne suffit pas</td></tr>
+      <tr><td class="role">2</td><td>Access packages, demande en self-service, approbation manager, multi-étapes, expiration</td><td>P2</td></tr>
+      <tr><td class="role">2</td><td>Attribution automatique d'access packages, demande par le manager pour son équipe</td><td>Governance</td></tr>
+      <tr><td class="role">3</td><td>Provisioning SCIM sortant des utilisateurs vers les apps</td><td>Gratuit (groupes : P1)</td></tr>
+      <tr><td class="role">4</td><td>API-driven inbound provisioning</td><td>P1</td></tr>
+      <tr><td class="role">—</td><td>PIM, Access Reviews</td><td>P2</td></tr>
+      <tr><td class="role">—</td><td>Conditional Access</td><td>P1</td></tr>
+    </table>
+    <p class="source">Source : <a href="https://learn.microsoft.com/entra/id-governance/licensing-fundamentals">Microsoft Learn — Entra ID Governance licensing fundamentals</a>, tableau « Features by license » (mis à jour le 14/09/2026), relu le 23/09.</p>
   </section>
 
   <section class="doc-section" id="a4">
@@ -590,7 +618,8 @@
 
     <h4>4.1 Onboarding</h4>
     <ol>
-      <li>RH saisit la date d'embauche, le département et le manager dans Entra.</li>
+      <li>RH saisit la date d'embauche, le département et le manager dans la table RH ; le
+      provisioning API crée le compte et pose ces attributs dans Entra (bloc 4).</li>
       <li>Lifecycle Workflows déclenche à J-X : création du compte, licences de base, groupes
       dynamiques, TAP, notification manager et IT.</li>
       <li>Le collaborateur ou son manager demande, via My Access, les accès complémentaires —
@@ -600,19 +629,21 @@
     </ol>
     <table class="raci">
       <tr><th>Rôle</th><th>Responsabilité</th></tr>
-      <tr><td class="role">RH</td><td>Responsable — saisie des attributs</td></tr>
+      <tr><td class="role">RH</td><td>Responsable — saisie dans la table RH</td></tr>
       <tr><td class="role">Manager</td><td>Approbateur des accès complémentaires · Informé à la création du compte</td></tr>
       <tr><td class="role">IT / Sécurité</td><td>Consulté — paramétrage des workflows et des apps SCIM</td></tr>
     </table>
 
     <h4>4.2 Offboarding</h4>
     <ol>
-      <li>RH saisit la date de départ dans Entra dès qu'elle est connue.</li>
+      <li>RH saisit la date de départ dans la table RH dès qu'elle est connue ; le
+      provisioning API la porte dans Entra.</li>
       <li>Lifecycle Workflows déclenche à J : révocation des sessions actives, désactivation du
       compte, retrait des groupes et licences.</li>
       <li>Export SCIM de désactivation vers les apps tierces concernées.</li>
-      <li>Le bloc 4 vérifie, indépendamment, que la date saisie correspond à un compte
-      désactivé dans les délais — filet de sécurité si l'étape 1 a été oubliée.</li>
+      <li>Le contrôle en appui du bloc 4 vérifie, indépendamment, que le compte est bien
+      désactivé dans les délais — filet de sécurité si une ligne a été rejetée ou si quelqu'un
+      a modifié le compte directement dans Entra.</li>
     </ol>
     <table class="raci">
       <tr><th>Rôle</th><th>Responsabilité</th></tr>
@@ -623,7 +654,8 @@
 
     <h4>4.3 Mover — changement de poste ou de département</h4>
     <ol>
-      <li>RH ou manager met à jour l'attribut département / poste dans Entra.</li>
+      <li>RH met à jour le département ou le poste dans la table RH ; le provisioning API
+      le porte dans Entra.</li>
       <li>Les groupes dynamiques se recalculent automatiquement.</li>
     </ol>
     <div class="callout">
@@ -635,15 +667,17 @@
     </div>
     <table class="raci">
       <tr><th>Rôle</th><th>Responsabilité</th></tr>
-      <tr><td class="role">RH / Manager</td><td>Responsable — mise à jour de l'attribut</td></tr>
+      <tr><td class="role">RH</td><td>Responsable — mise à jour dans la table RH</td></tr>
       <tr><td class="role">Nouveau manager</td><td>Approbateur — Access Review des accès hérités</td></tr>
       <tr><td class="role">IT / Sécurité</td><td>Consulté — scoping des groupes</td></tr>
     </table>
 
     <h4>4.4 Bloc 4 — cadence et alerte</h4>
-    <p>Le job de réconciliation tourne <strong>quotidiennement</strong>, hors heures ouvrées :
-    il compare la source déclarative RH et l'état réel Entra, et liste les écarts (saisie
-    manquante, date incohérente, compte non désactivé alors que la date de départ est passée).
+    <p>Le job d'écriture pousse la table RH vers Entra à chaque modification, ou au plus tard
+    une fois par jour. Le contrôle en appui tourne <strong>quotidiennement</strong>, hors
+    heures ouvrées : il compare la table RH et l'état réel Entra, et liste les écarts
+    (ligne rejetée, compte modifié hors de la table, compte non désactivé alors que la date
+    de départ est passée).
     Destination de l'alerte : IT/Sécurité, par le même canal que les autres alertes d'infra —
     sans destinataire clair, ce contrôle détectif existe sur le papier mais personne ne le
     regarde.</p>
@@ -665,14 +699,18 @@
       <li>Mover mal scopé → droits obsolètes non retirés (voir §4.3).</li>
       <li>Couverture SCIM de la galerie Entra bonne mais pas universelle → réconciliation
       manuelle probable sur certains outils métier.</li>
+      <li><strong>Licence Governance non vérifiée au tenant</strong> : si seul P2 est présent,
+      le bloc 1 entier ne tourne pas (§3, licences).</li>
     </ul>
     <div class="callout">
       <span class="tag">Risque central</span>
-      <p>SIRH inutilisable → Entra devient source de vérité alimentée manuellement : la
-      discipline de saisie RH est une dépendance critique du bloc birthright. Un retard ou une
-      erreur de saisie retarde ou bloque le déclenchement automatique de tout le cycle de vie.
-      <strong>Mitigation retenue</strong> : le bloc 4 ne supprime pas ce risque, il le rend
-      visible.</p>
+      <p>SIRH inutilisable → la table RH devient la source de vérité : la discipline de
+      saisie RH reste une dépendance critique du bloc birthright. Un retard ou une erreur de
+      saisie retarde ou bloque le déclenchement automatique de tout le cycle de vie.
+      <strong>Mitigation retenue</strong> (révisée le 23/09) : une seule porte d'écriture, le
+      provisioning API, au lieu d'une saisie à la main dans Entra ; le contrôle en appui rend
+      visible ce qui lui échappe. La qualité de la saisie reste un risque humain ; le canal
+      d'écriture, lui, n'en est plus un.</p>
     </div>
   </section>
 
@@ -691,9 +729,9 @@
       <li><strong>Birthright</strong> (bloc 1) — le socle : création et désactivation
       automatique des comptes. Résout le point le plus critique — l'offboarding manqué — et ne
       dépend d'aucun autre bloc.</li>
-      <li><strong>Réconciliation</strong> (bloc 4) — mise en place en parallèle de la phase 1
-      dès que la saisie RH démarre, pour ne jamais faire tourner le birthright sans son filet
-      de sécurité.</li>
+      <li><strong>Saisie RH par API</strong> (bloc 4) — mise en place avec la phase 1 : c'est
+      elle qui pose les dates qui déclenchent le birthright. Le contrôle en appui démarre en
+      même temps, pour ne jamais faire tourner le birthright sans son filet de sécurité.</li>
       <li><strong>Entitlement Management</strong> (bloc 2) — demandes d'accès avec approbation
       manager, une fois le socle stable.</li>
       <li><strong>SCIM apps tierces</strong> (bloc 3) — au fil de l'eau, en commençant par les
@@ -705,10 +743,22 @@
 
   <section class="doc-section" id="a9">
     <h3><span class="sec-n">9</span>Coûts</h3>
-    <p>Licence Entra ID Governance (P2) déjà présente au tenant — pas de coût d'acquisition à
-    chiffrer pour les blocs 1, 2 et 4. Coût variable restant : consommation Azure Logic
-    Apps/Functions pour les apps tierces sans SCIM natif (bloc 3) et pour l'outil de
-    réconciliation (bloc 4) — à chiffrer une fois le périmètre d'apps tierces connu.</p>
+    <p>Tout dépend d'une vérification au tenant : centre d'admin Entra › Facturation ›
+    Licences › Tous les produits.</p>
+    <ul>
+      <li><strong>On y voit « Microsoft Entra ID Governance »</strong> (ou « … Step Up for
+      Microsoft Entra ID P2 », ou « Microsoft Entra Suite ») : pas de coût d'acquisition pour
+      les blocs 1, 2 et 4.</li>
+      <li><strong>On n'y voit que « Entra ID P2 » ou « Microsoft 365 E5 »</strong> : les blocs
+      2, 3 et 4 tournent tels quels, mais le bloc 1 exige un achat. Prix public de Microsoft
+      Entra ID Governance : 7 $ par utilisateur et par mois, engagement annuel ; il faut une
+      licence par utilisateur dans le périmètre des workflows. Le « Step Up for P2 » n'a pas de
+      prix public : à demander au revendeur.</li>
+    </ul>
+    <p>Coût variable dans les deux cas : consommation Azure Logic Apps/Functions pour les apps
+    tierces sans SCIM natif (bloc 3) et pour le job d'écriture et le contrôle du bloc 4 — à
+    chiffrer une fois le périmètre d'apps tierces connu.</p>
+    <p class="source">Source prix : <a href="https://www.microsoft.com/security/business/microsoft-entra-pricing">Microsoft Entra pricing</a>, relu le 23/09/2026.</p>
   </section>
 
   <!-- ============ PART B : Phase 1 guide ============ -->
@@ -763,6 +813,9 @@
       répond de « cet accès a-t-il encore un sens ? » à chaque revue. Le nom de la personne est
       un détail d'exécution que Ronny règle au moment d'assigner le rôle, pas un préalable au
       design.</p>
+      <p><strong>Depuis la révision du 23/09</strong>, la saisie courante passe par la table RH
+      et le provisioning API : ce rôle devient un recours pour corriger un cas isolé, pas le
+      chemin normal.</p>
     </div>
   </section>
 
@@ -773,8 +826,9 @@
       <span class="tag">Prérequis licence — bloquant</span>
       <p>Lifecycle Workflows exige une licence Microsoft Entra ID Governance ou Microsoft Entra
       Suite. Governance est un <strong>add-on</strong> : il s'ajoute à une base Entra ID P1/P2,
-      il ne la remplace pas. Sans cette licence, aucune des tâches natives ci-dessous n'est
-      disponible — ici, non bloquant : le tenant de Ronny a déjà Governance (P2), cf. §9.
+      il ne la remplace pas, et P2 seul (y compris via Microsoft 365 E5) ne suffit pas. Sans
+      cette licence, aucune des tâches natives ci-dessous n'est disponible — <strong>à vérifier
+      au tenant</strong>, cf. DA §9.
       Corollaire : Conditional Access nécessite au minimum Entra ID P1, déjà couvert si M365
       Business Premium ou E3/E5.</p>
     </div>
@@ -783,8 +837,9 @@
     <p>Trigger sur les attributs <span class="attr">employeeHireDate</span> /
     <span class="attr">employeeLeaveDateTime</span> plutôt que déclenchement manuel ou planifié
     seul. Sans connecteur RH automatisé (Workday/SuccessFactors — absent chez Ronny à ce
-    stade), ces deux attributs doivent être saisis à la main à la création du compte : un vrai
-    prérequis de <em>process</em>, pas seulement technique, à mettre dans le RACI. Fenêtre
+    stade), ces deux attributs sont posés par le provisioning API à partir de la table RH
+    (DA §3, bloc 4) : la saisie reste un vrai prérequis de <em>process</em>, pas seulement
+    technique, à mettre dans le RACI. Fenêtre
     pré-embauche configurable (ex. J-5) pour lancer les tâches de préparation avant le jour J.</p>
 
     <h4>Tâches natives à activer</h4>
@@ -872,8 +927,10 @@
   <section class="doc-section" id="c2">
     <h3><span class="sec-n">2</span>Prérequis avant de configurer quoi que ce soit</h3>
     <ol>
-      <li><strong>Licence</strong> — même add-on Entra ID Governance que Lifecycle Workflows,
-      déjà confirmée présente au tenant. Aucun point bloquant supplémentaire.</li>
+      <li><strong>Licence</strong> — Entra ID P2 suffit pour l'essentiel de ce bloc : access
+      packages, demande en self-service, approbation manager, multi-étapes, expiration. Deux
+      options exigent Governance : l'attribution automatique d'access packages et la demande
+      faite par un manager pour son équipe.</li>
       <li><strong>Un catalogue et au moins un access package définis avant tout test.</strong>
       Contrairement à Lifecycle Workflows (case à cocher globale), Entitlement Management ne fait
       rien tant qu'aucun catalogue de ressources n'existe — c'est un contenu à créer, pas un
@@ -982,9 +1039,9 @@
   <section class="doc-section" id="d2">
     <h3><span class="sec-n">2</span>Prérequis avant de configurer une app</h3>
     <ol>
-      <li><strong>Licence</strong> — le provisioning SCIM sortant fait partie d'Entra ID
-      Governance (même add-on que les blocs 1 et 2), déjà confirmé présent au tenant. Pas de
-      point bloquant supplémentaire.</li>
+      <li><strong>Licence</strong> — le provisioning SCIM sortant des utilisateurs est inclus
+      dès la version gratuite d'Entra ID (P1 pour provisionner des groupes). Ce bloc ne dépend
+      pas de la question Governance.</li>
       <li><strong>L'app doit exposer un endpoint SCIM 2.0</strong>, nativement (référencée dans
       l'Entra App Gallery) ou via une implémentation SCIM générique côté éditeur. Sans endpoint
       SCIM, ce bloc ne s'applique pas à cette app.</li>
@@ -1079,6 +1136,13 @@
     silencieusement sur une fiche mal renseignée, un compte désactivé à la main sans le signaler,
     un compte fantôme jamais rattaché à une fiche RH : aucun des blocs 1 à 3 ne détecte ses propres
     pannes. Ce bloc est construit spécifiquement pour ça.</p>
+    <div class="callout">
+      <span class="tag">Révisé le 23/09</span>
+      <p>L'écriture dans Entra passe désormais par l'API-driven inbound provisioning (DA §3,
+      bloc 4) : plus de saisie à la main. Cet outil n'est plus le mécanisme principal, il vient
+      en appui — il remonte les lignes rejetées par le provisioning et les modifications faites
+      directement dans Entra, hors de la table RH.</p>
+    </div>
     <div class="callout resolved">
       <span class="tag">Garde-fou</span>
       <p>Il n'écrit jamais dans Entra. Seuls des appels <span class="attr">GET /users</span> en
