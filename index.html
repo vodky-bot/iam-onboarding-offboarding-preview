@@ -428,7 +428,7 @@
     IAM<br>Onboarding / Offboarding
   </p>
   <div class="meta">
-    <span class="status ouvert">● Governance : achat décidé</span><br>
+    <span class="status ouvert">● Governance : essai avant achat</span><br>
     Entra ID P1 · P2 · Governance<br>
     Mis à jour : 23/09/2026
   </div>
@@ -546,13 +546,14 @@
     </div>
 
     <div class="callout">
-      <span class="tag">Licence — décidée le 23/09</span>
+      <span class="tag">Licence — revue le 23/09</span>
       <p>« Governance (P2) » désignait deux produits distincts. <strong>Entra ID P2</strong> est
       inclus dans Microsoft 365 E5 ; <strong>Entra ID Governance</strong> est un complément
       vendu à part. Lifecycle Workflows (bloc 1) exige Governance ou Entra Suite — P2 seul ne
-      suffit pas. <strong>Ronny achète la licence Governance</strong> (23/09) : le dossier
-      part sur cette base. Reste un seul point à constater, pas à décider : la licence active au
-      tenant avant la configuration du bloc 1 (§9).</p>
+      suffit pas. Aucune formule Microsoft 365 ne l'inclut, sauf E7 : Business Premium et E3 donnent P1,
+      E5 donne P2. Ronny a jugé le prix élevé (23/09) : proposition en attente de sa réponse —
+      démarrer sur P1, essayer Governance gratuitement sur la cohorte pilote, puis n'acheter
+      qu'au nombre juste (§9).</p>
     </div>
   </section>
 
@@ -707,7 +708,7 @@
       <li>Mover mal scopé → droits obsolètes non retirés (voir §4.3).</li>
       <li>Couverture SCIM de la galerie Entra bonne mais pas universelle → réconciliation
       manuelle probable sur certains outils métier.</li>
-      <li><strong>Licence Governance achetée mais pas encore active</strong> : tant qu'elle
+      <li><strong>Licence Governance pas encore active</strong> : tant qu'elle (ou son essai)
       n'apparaît pas au tenant, le bloc 1 ne se configure pas (§3, licences ; §9).</li>
     </ul>
     <div class="callout">
@@ -751,12 +752,26 @@
 
   <section class="doc-section" id="a9">
     <h3><span class="sec-n">9</span>Coûts</h3>
-    <p><strong>Décidé le 23/09 : Ronny achète Microsoft Entra ID Governance.</strong> Tous
-    les blocs tournent donc dans leur version complète : Lifecycle Workflows (bloc 1), options
-    Governance de l'Entitlement Management (bloc 2), custom task pour les apps sans SCIM
+    <p><strong>Aucune formule Microsoft 365 courante ne contient Governance.</strong> Business
+    Premium et E3 incluent Entra ID P1, E5 inclut P2 ; Governance n'est compris que dans Entra
+    Suite (12 $) et Microsoft 365 E7. Il débloque Lifecycle Workflows (bloc 1), les options
+    Governance de l'Entitlement Management (bloc 2) et la custom task pour les apps sans SCIM
     (bloc 3).</p>
+    <p><strong>Proposé le 23/09, en attente de Ronny : essayer avant d'acheter.</strong></p>
     <ul>
-      <li><strong>Coût fixe</strong> : prix public 7 $ par utilisateur et par mois, engagement
+      <li><strong>Sans rien acheter (P1)</strong> : le bloc 4 crée et désactive les comptes
+      depuis la table RH, le bloc 3 provisionne les apps SCIM, une Logic App autonome traite
+      les apps sans SCIM. Ce qui manque : les tâches natives du jour J (TAP, révocation des
+      sessions, notification du manager), à remplacer par un script à maintenir.</li>
+      <li><strong>Essai gratuit</strong> de Governance, ouvert à un tenant qui a déjà P1 :
+      centre d'admin Microsoft 365 › Facturation › Acheter des services, sur la cohorte
+      pilote de la Phase 1.</li>
+      <li><strong>Acheter au nombre juste</strong> : Microsoft compte les utilisateurs dans
+      le périmètre des workflows, pas tout l'annuaire, et les licences des partants se
+      réattribuent (exemple officiel : 40 puis 50 départs dans l'année, 50 licences).</li>
+    </ul>
+    <ul>
+      <li><strong>Coût fixe si achat</strong> : prix public 7 $ par utilisateur et par mois, engagement
       annuel ; une licence par utilisateur dans le périmètre des workflows. Si le tenant a déjà
       Entra ID P2, demander au revendeur le « Step Up for Microsoft Entra ID P2 » (pas de prix
       public) ; Microsoft Entra Suite couvre aussi.</li>
@@ -768,7 +783,7 @@
     <p>Coût variable : consommation Azure Logic Apps/Functions pour les apps
     tierces sans SCIM natif (bloc 3) et pour le job d'écriture et le contrôle du bloc 4 — à
     chiffrer une fois le périmètre d'apps tierces connu.</p>
-    <p class="source">Source prix : <a href="https://www.microsoft.com/security/business/microsoft-entra-pricing">Microsoft Entra pricing</a>, relu le 23/09/2026.</p>
+    <p class="source">Sources : <a href="https://www.microsoft.com/security/business/microsoft-entra-pricing">Microsoft Entra pricing</a> ; <a href="https://learn.microsoft.com/entra/id-governance/licensing-fundamentals">Entra ID Governance licensing fundamentals</a> (inclusions, essai, décompte des licences), relus le 23/09/2026.</p>
   </section>
 
   <!-- ============ PART B : Phase 1 guide ============ -->
@@ -837,8 +852,8 @@
       <p>Lifecycle Workflows exige une licence Microsoft Entra ID Governance ou Microsoft Entra
       Suite. Governance est un <strong>add-on</strong> : il s'ajoute à une base Entra ID P1/P2,
       il ne la remplace pas, et P2 seul (y compris via Microsoft 365 E5) ne suffit pas. Sans
-      cette licence, aucune des tâches natives ci-dessous n'est disponible. <strong>Achat décidé
-      le 23/09</strong> : constater qu'elle est active au tenant avant de commencer, cf. DA §9.
+      cette licence, aucune des tâches natives ci-dessous n'est disponible. <strong>Essai ou achat</strong>
+      : constater qu'elle est active au tenant avant de commencer, cf. DA §9.
       Corollaire : Conditional Access nécessite au minimum Entra ID P1, déjà couvert si M365
       Business Premium ou E3/E5.</p>
     </div>
