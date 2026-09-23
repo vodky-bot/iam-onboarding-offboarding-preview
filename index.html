@@ -450,6 +450,7 @@
       <li><a href="#a7"><span class="n">7</span>Conformité</a></li>
       <li><a href="#a8"><span class="n">8</span>Plan par phases</a></li>
       <li><a href="#a9"><span class="n">9</span>Coûts</a></li>
+      <li><a href="#a10"><span class="n">10</span>Revue du 23/09</a></li>
     </ul>
     <p class="group-label">Partie B — Phase 1</p>
     <ul>
@@ -666,13 +667,17 @@
       <li>RH met à jour le département ou le poste dans la table RH ; le provisioning API
       le porte dans Entra.</li>
       <li>Les groupes dynamiques se recalculent automatiquement.</li>
+      <li>Un workflow mover natif (modèle <em>Employee job profile change</em>, déclenché par le
+      changement de poste ou de département) prévient l'ancien et le nouveau manager, retire les
+      groupes et Teams de l'ancien poste, et programme le retrait des access packages de l'ancien
+      poste (15 jours par défaut, le temps de la passation).</li>
     </ol>
     <div class="callout">
-      <span class="tag">Point de vigilance</span>
-      <p>Le recalcul ajoute les nouveaux accès mais ne retire pas nécessairement les anciens si
-      le scoping des groupes n'est pas strict. Mitigation retenue : un Access Review
-      trimestriel dédié aux movers, où le nouveau manager confirme ou révoque les accès hérités
-      de l'ancien poste.</p>
+      <span class="tag">Révisé le 23/09</span>
+      <p>La version précédente ne comptait que sur un Access Review trimestriel pour retirer les
+      accès hérités — jusqu'à trois mois de droits en trop. Lifecycle Workflows a des modèles
+      mover natifs : le retrait se fait au changement, et l'Access Review trimestriel reste comme
+      contrôle, plus comme seul mécanisme.</p>
     </div>
     <table class="raci">
       <tr><th>Rôle</th><th>Responsabilité</th></tr>
@@ -807,6 +812,102 @@
     <p class="source">Sources : <a href="https://www.microsoft.com/security/business/microsoft-entra-pricing">Microsoft Entra pricing</a> ; <a href="https://learn.microsoft.com/entra/id-governance/licensing-fundamentals">Entra ID Governance licensing fundamentals</a> (inclusions, essai, décompte des licences), relus le 23/09/2026.</p>
   </section>
 
+  <section class="doc-section" id="a10">
+    <h3><span class="sec-n">10</span>Revue du 23/09 — ce qui manquait</h3>
+    <p>Relecture complète du dossier contre la documentation Microsoft et contre ce qu'un vrai
+    cycle d'arrivées et de départs rencontre. Quatre erreurs sont corrigées sur place (§4.3,
+    Partie B §3, Partie E). Restent les manques ci-dessous, classés par moment où ils bloquent.
+    Pour chacun : une décision par défaut, que Ronny ajuste s'il le souhaite.</p>
+
+    <h4>Avant le pilote — sinon le pilote échoue</h4>
+    <ol>
+      <li><strong>Le départ immédiat.</strong> Tout le dossier suppose une date de départ connue
+      à l'avance. Un licenciement ou une faute grave demande de couper l'accès dans l'heure.
+      Lifecycle Workflows a un modèle à la demande (<em>Real-time employee termination</em>) —
+      mais par défaut il <em>supprime</em> le compte. <em>Par défaut :</em> un workflow à la
+      demande qui désactive, révoque les sessions et retire les groupes, sans suppression ;
+      déclenché par IT/Sécurité sur demande écrite des RH ; objectif : accès coupé en moins
+      d'une heure.</li>
+      <li><strong>La reprise des comptes existants.</strong> Le provisioning par API reconnaît
+      un compte par son matricule (<span class="attr">employeeId</span>). Un compte existant
+      sans matricule n'est pas reconnu : le service en crée un second. <em>Par défaut :</em>
+      avant le premier envoi, poser le matricule sur tous les comptes actuels, puis lancer
+      l'outil de contrôle une première fois pour obtenir l'état de départ (orphelins, doublons)
+      et le nettoyer. Le service ne gère pas non plus les collisions d'identifiant de connexion
+      (deux « j.martin ») : la règle de nommage se décide avant.</li>
+      <li><strong>Les administrateurs qui partent.</strong> Les tâches de désactivation ne
+      s'appliquent pas à un compte qui a un rôle d'administration Entra — c'est-à-dire au départ
+      le plus dangereux. <em>Par défaut :</em> tous les rôles admin passent par PIM en
+      « éligible » (aucun rôle permanent hors compte de secours) ; au départ d'un admin,
+      IT/Sécurité retire ses rôles à la main, puis le workflow fait le reste ; l'outil de
+      contrôle signale tout compte admin dont la date de départ est passée.</li>
+      <li><strong>La table RH est devenue la clé du tenant.</strong> Depuis la révision du
+      23/09, écrire une ligne crée un compte. Qui peut modifier la table peut donc créer un
+      accès. <em>Par défaut :</em> écriture réservée à deux personnes RH nommées, historique des
+      versions activé, toute création relue par une seconde personne ; le job d'envoi
+      s'authentifie par identité managée ou certificat (pas de secret dans un fichier), avec la
+      seule permission <span class="attr">SynchronizationData-User.Upload</span> ; dans
+      l'application de provisioning, l'action « supprimer » est désactivée et le seuil de
+      suppression accidentelle est activé.</li>
+      <li><strong>Le SSO des applications.</strong> Désactiver un compte Entra ne coupe rien
+      dans une application où l'on se connecte avec un mot de passe local. <em>Par défaut :</em>
+      une application n'entre dans le périmètre de la Phase 3 que si sa connexion passe par
+      Entra (SSO) ; sinon elle est traitée comme « gestion manuelle assumée ».</li>
+      <li><strong>Les groupes dynamiques des partants.</strong> Un compte désactivé reste membre
+      de ses groupes dynamiques si leur règle ne le filtre pas. <em>Par défaut :</em> toutes les
+      règles de groupes dynamiques incluent <span class="attr">user.accountEnabled -eq true</span>.</li>
+    </ol>
+
+    <h4>Avant d'étendre au reste de l'entreprise</h4>
+    <ol>
+      <li><strong>Les externes.</strong> Prestataires, stagiaires, intérimaires, invités : le
+      dossier ne parle que des salariés. <em>Par défaut :</em> un champ « type de contrat » dans
+      la table RH, une date de fin obligatoire pour tout non-salarié, un salarié référent
+      (sponsor) pour chaque externe ; un invité sans référent est retiré.</li>
+      <li><strong>Les cas qui cassent les dates.</strong> Embauche annulée après la création du
+      compte (J-7), départ avancé ou repoussé, congé long, réembauche d'un ancien. <em>Par
+      défaut :</em> une embauche annulée désactive le compte (la ligne passe à « inactif », elle
+      n'est pas effacée) ; un congé long désactive sans retirer les accès ; une réembauche
+      réactive l'ancien compte par son matricule plutôt que d'en créer un neuf.</li>
+      <li><strong>Les données du partant.</strong> Boîte mail, OneDrive, fichiers et groupes
+      dont il est propriétaire, applications qu'il a enregistrées : rien de tout cela n'est
+      natif. <em>Par défaut :</em> procédure IT écrite, déclenchée par le mail « veille du
+      départ » au manager — boîte convertie en boîte partagée et confiée au manager, OneDrive
+      transféré au manager, propriétés de groupes réattribuées ; suppression du compte 30 jours
+      après le départ.</li>
+      <li><strong>Les appareils.</strong> Ordinateur et téléphone du partant (Intune) : retrait
+      des données d'entreprise au jour J, restitution du matériel au RACI.</li>
+      <li><strong>L'inventaire des applications.</strong> La Phase 3 ne peut pas commencer sans
+      la liste : application, propriétaire métier, SSO oui/non, SCIM oui/non, sensibilité.
+      C'est le premier livrable de la Phase 3.</li>
+    </ol>
+
+    <h4>Pour piloter et tenir dans la durée</h4>
+    <ol>
+      <li><strong>Des chiffres qui disent si ça marche.</strong> Délai entre la date de départ et
+      la désactivation effective (cible : le jour même) ; nombre d'écarts remontés par l'outil
+      de contrôle chaque semaine ; accès expirés non renouvelés.</li>
+      <li><strong>Un critère de fin d'essai Governance.</strong> Sans lui, l'essai ne tranche
+      rien. <em>Par défaut :</em> on achète si, sur la cohorte pilote, 100 % des départs sont
+      désactivés le jour J et aucune arrivée n'attend son compte, sans intervention manuelle.</li>
+      <li><strong>Le RGPD de la table RH.</strong> Elle contient des données personnelles : à
+      inscrire au registre des traitements, accès restreints, durée de conservation des lignes
+      des partants décidée avec la personne en charge de la protection des données.</li>
+      <li><strong>Qui surveille le provisioning.</strong> Un envoi rejeté ou un service mis en
+      quarantaine par Microsoft ne prévient personne. <em>Par défaut :</em> IT/Sécurité lit les
+      journaux de provisioning chaque semaine ; l'outil de contrôle couvre le reste.</li>
+    </ol>
+
+    <div class="callout">
+      <span class="tag">Écart avec la console</span>
+      <p>La console de démonstration ne saisit aujourd'hui que le matricule, le nom, l'e-mail et
+      les deux dates. Il lui manque le département, le manager et le type de contrat — les
+      champs qui déclenchent les workflows, les groupes et les approbations. Tant qu'ils n'y
+      sont pas, elle ne peut pas servir de table RH. Ajout confié à Victor.</p>
+    </div>
+    <p class="source">Sources : Microsoft Learn — <a href="https://learn.microsoft.com/entra/id-governance/lifecycle-workflow-templates">Lifecycle Workflows templates</a>, <a href="https://learn.microsoft.com/entra/id-governance/lifecycle-workflow-tasks">Lifecycle Workflows tasks</a>, <a href="https://learn.microsoft.com/entra/identity/app-provisioning/inbound-provisioning-api-faqs">API-driven inbound provisioning FAQ</a> et <a href="https://learn.microsoft.com/entra/identity/app-provisioning/inbound-provisioning-api-concepts">concepts</a>, relus le 23/09/2026.</p>
+  </section>
+
   <!-- ============ PART B : Phase 1 guide ============ -->
   <div class="part-divider">
     <span class="num">B</span>
@@ -894,9 +995,25 @@
     <p><strong>Jour J</strong> — Add to groups · Add to Teams · Assign licenses · Enable
     account · Generate TAP ou envoi mot de passe au manager (l'un ou l'autre, pas les deux) ·
     Run a Custom Task Extension.</p>
-    <p><strong>Départ</strong> — Remove from groups/Teams · Remove licenses · Disable account ·
-    Revoke all sessions · Cancel Teams meetings · Convert mailbox to shared · Backup OneDrive ·
-    Remove from org chart · Delete user (tâche séparée, à échéance de rétention).</p>
+    <p><strong>Veille du départ (J-7 à J-1)</strong> — Send email to manager before user's last
+    day · Remove user from selected groups/Teams · Cancel all pending access package assignment
+    requests.</p>
+    <p><strong>Départ (jour J)</strong> — Disable user account · Revoke all refresh tokens ·
+    Remove users from all groups · Remove users from all teams · Remove all access package
+    assignments · Send email on user's last day.</p>
+    <p><strong>Après le départ</strong> — Remove all license assignments · Send email to user's
+    manager after their last day · Delete User (à échéance de rétention, §10).</p>
+    <div class="callout">
+      <span class="tag">Corrigé le 23/09</span>
+      <p>La liste précédente citait comme natives quatre tâches qui n'existent pas dans Lifecycle
+      Workflows : annuler les réunions Teams, convertir la boîte mail en boîte partagée,
+      sauvegarder le OneDrive, retirer de l'organigramme. Elles passent par une Custom Task
+      Extension ou par une procédure IT écrite (§10).</p>
+      <p>Deux limites documentées par Microsoft, à connaître avant le pilote : les tâches
+      <em>Disable</em>, <em>Enable</em> et <em>Delete</em> ne s'appliquent pas à un compte qui
+      a un rôle d'administration Entra ; et les tâches de retrait de groupes ignorent les groupes
+      dynamiques, de distribution, à extension de messagerie et assignables à un rôle.</p>
+    </div>
 
     <h4>Hors périmètre natif</h4>
     <p>Nécessite une extension (Custom Task Extension / Logic App) : apps tierces sans
@@ -1204,7 +1321,7 @@
     <p>Outil en ligne de commande, dépôt privé <span class="attr">vodky-bot/iam-reconciliation-tool</span> :</p>
     <ul>
       <li><strong>Moteur de réconciliation pur</strong> — aucun appel réseau, testable sans tenant
-      réel, 23 tests unitaires couvrant chaque type d'anomalie et ses cas limites (délais de
+      réel, 28 tests unitaires couvrant chaque type d'anomalie et ses cas limites (délais de
       grâce, écarts de date, comptes orphelins).</li>
       <li><strong>Source RH</strong> : CSV avec un format documenté (matricule, nom, prénom, email
       attendu, date d'embauche, date de départ).</li>
@@ -1227,6 +1344,7 @@
       <tr><td class="role">ABSENT_DANS_ENTRA</td><td>critique</td><td>Embauche RH passée, aucun compte Entra créé</td></tr>
       <tr><td class="role">COMPTE_NON_ACTIVE</td><td>attention</td><td>Embauche RH passée, compte encore désactivé</td></tr>
       <tr><td class="role">ABSENT_DANS_RH (désactivé)</td><td>attention</td><td>Compte désactivé sans fiche RH — à nettoyer</td></tr>
+      <tr><td class="role">MATRICULE_EN_DOUBLE</td><td>critique</td><td>Plusieurs comptes Entra portent le même matricule — les autres contrôles sont impossibles tant qu'il existe</td></tr>
       <tr><td class="role">DATE_INCOHERENTE</td><td>info</td><td>Écart de date RH/Entra au-delà de la tolérance configurée</td></tr>
     </table>
     <p>Des délais de grâce évitent de signaler à tort un compte encore en cours de provisioning
@@ -1268,9 +1386,9 @@
       <li><strong>Pas de dashboard temps réel</strong> : un JSON + webhook + page de lecture du
       dernier rapport suffit à ce stade — un vrai historique de tendance se justifiera seulement
       si le volume d'écarts devient difficile à suivre report par report.</li>
-      <li><strong>CSV comme source RH</strong> plutôt qu'une connexion directe au SIRH : cohérent
-      avec la décision déjà actée au DA (SIRH existant mais inutilisable, saisie manuelle côté RH
-      pour les blocs 1-3).</li>
+      <li><strong>Export de la table RH comme source</strong> plutôt qu'une connexion directe au
+      SIRH (inutilisable, DA §2) : l'outil lit la même table que celle qui écrit dans Entra
+      (DA §3, bloc 4), exportée en CSV.</li>
       <li><strong>Cron quotidien hors heures ouvrées</strong> par défaut, ajustable selon le
       volume de mouvements RH réel une fois en production.</li>
     </ul>
@@ -1279,7 +1397,7 @@
   <footer class="doc-footer">
     Dossier rédigé par Camille (cadrage, flux, RACI, mise en forme) et Victor (architecture
     cible, sécurité, configuration technique) pour Ronny.<br>
-    Version de travail — dernière mise à jour 22/09/2026.
+    Version de travail — dernière mise à jour 23/09/2026.
   </footer>
 </main>
 </div>
