@@ -783,6 +783,22 @@
     <p>Coût variable : consommation Azure Logic Apps/Functions pour les apps
     tierces sans SCIM natif (bloc 3) et pour le job d'écriture et le contrôle du bloc 4 — à
     chiffrer une fois le périmètre d'apps tierces connu.</p>
+    <h4>Et hors de Microsoft ?</h4>
+    <p>Question de Ronny, 23/09 : tous les outils IAM demandent-ils ce genre de licence ?
+    Non, pas celle-là. Mais tout outil qui <em>automatise</em> les arrivées et départs se paie
+    par utilisateur. Prix publics relevés le 23/09, engagement annuel :</p>
+    <table class="raci">
+      <tr><th>Outil</th><th>Ce qui automatise</th><th>Prix public</th></tr>
+      <tr><td class="role">Entra ID Governance</td><td>Lifecycle Workflows, dans l'annuaire déjà en place</td><td>7 $ / utilisateur / mois, en plus du P1 déjà payé</td></tr>
+      <tr><td class="role">Okta</td><td>Lifecycle Management, à partir de l'offre Essentials</td><td>17 $ / utilisateur / mois, minimum 1 500 $ / an</td></tr>
+      <tr><td class="role">JumpCloud</td><td>User Lifecycle Management, vendu seul</td><td>3 $ / utilisateur / mois (4 $ au mois)</td></tr>
+      <tr><td class="role">Entra P1 seul</td><td>Bloc 4 + Logic Apps + script à maintenir</td><td>0 $ de licence en plus, du temps de construction et d'entretien</td></tr>
+    </table>
+    <p><strong>Lecture</strong> : JumpCloud est moins cher sur le papier, mais c'est un second
+    annuaire à brancher sur Entra, qui reste la source des comptes Microsoft 365 : deux
+    outils à tenir d'accord, et une migration à chiffrer. Okta coûte plus cher pour le même service. L'essai de Governance sur la
+    cohorte pilote reste la façon la moins chère de trancher sur pièce.</p>
+    <p class="source">Prix : <a href="https://www.okta.com/pricing/">Okta pricing</a>, <a href="https://jumpcloud.com/pricing">JumpCloud pricing</a>, relus le 23/09/2026 ; à confirmer auprès d'un revendeur (remises, hausse Microsoft du 1er juillet 2026).</p>
     <p class="source">Sources : <a href="https://www.microsoft.com/security/business/microsoft-entra-pricing">Microsoft Entra pricing</a> ; <a href="https://learn.microsoft.com/entra/id-governance/licensing-fundamentals">Entra ID Governance licensing fundamentals</a> (inclusions, essai, décompte des licences), relus le 23/09/2026.</p>
   </section>
 
