@@ -565,8 +565,9 @@
     <span class="attr">employeeLeaveDateTime</span>, <span class="attr">department</span>,
     <span class="attr">manager</span>. Tâches natives : création de compte, TAP, licences,
     groupes dynamiques, notification manager/IT, désactivation et révocation des sessions au
-    jour du départ. Dépendance critique : ces triggers reposent sur des attributs saisis à la
-    main par le RH, pas sur un flux amont fiable — documenté comme risque explicite (§6).</p>
+    jour du départ. Dépendance critique : ces triggers reposent sur les dates que le RH saisit
+    dans la table RH (bloc 4), pas sur un SIRH — la qualité de cette saisie est documentée
+    comme risque explicite (§6).</p>
 
     <h4>2 · Accès avec approbation manager</h4>
     <p><span class="attr">Entitlement Management</span> (Access Packages). Bundles
