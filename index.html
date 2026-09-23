@@ -578,8 +578,11 @@
 
     <h4>3 · Apps tierces</h4>
     <p>Provisioning <span class="attr">SCIM</span> sortant (App Gallery Entra ou SCIM
-    générique). Les apps sans SCIM passent par une extension Logic App / Function — coût de
-    consommation Azure en plus de la licence.</p>
+    générique). Les apps sans SCIM ont deux voies, qui n'exigent pas la même licence : une
+    <span class="attr">custom task</span> Logic App branchée dans les Lifecycle Workflows
+    (Governance, comme tout le bloc 1), ou une Logic App autonome déclenchée par le job du
+    bloc 4 ou par les provisioning logs, hors Lifecycle Workflows (P1 suffit). Dans les deux cas,
+    consommation Azure en plus.</p>
 
     <h4>4 · Saisie RH → Entra : écriture par API, contrôle en appui</h4>
     <ul>
@@ -603,7 +606,10 @@
       <tr><td class="role">1</td><td>Lifecycle Workflows (et extensions Logic Apps)</td><td><strong>Entra ID Governance</strong> ou Entra Suite — P2 seul ne suffit pas</td></tr>
       <tr><td class="role">2</td><td>Access packages, demande en self-service, approbation manager, multi-étapes, expiration</td><td>P2</td></tr>
       <tr><td class="role">2</td><td>Attribution automatique d'access packages, demande par le manager pour son équipe</td><td>Governance</td></tr>
+      <tr><td class="role">2</td><td>Extension Logic App d'un access package (approbation par règle métier, ticketing)</td><td>Governance</td></tr>
       <tr><td class="role">3</td><td>Provisioning SCIM sortant des utilisateurs vers les apps</td><td>Gratuit (groupes : P1)</td></tr>
+      <tr><td class="role">3</td><td>App sans SCIM : Logic App en custom task des Lifecycle Workflows</td><td><strong>Governance</strong> ou Entra Suite</td></tr>
+      <tr><td class="role">3</td><td>App sans SCIM : Logic App autonome, hors Lifecycle Workflows</td><td>P1 (+ consommation Azure)</td></tr>
       <tr><td class="role">4</td><td>API-driven inbound provisioning</td><td>P1</td></tr>
       <tr><td class="role">—</td><td>PIM, Access Reviews</td><td>P2</td></tr>
       <tr><td class="role">—</td><td>Conditional Access</td><td>P1</td></tr>
@@ -750,8 +756,10 @@
       <li><strong>On y voit « Microsoft Entra ID Governance »</strong> (ou « … Step Up for
       Microsoft Entra ID P2 », ou « Microsoft Entra Suite ») : pas de coût d'acquisition pour
       les blocs 1, 2 et 4.</li>
-      <li><strong>On n'y voit que « Entra ID P2 » ou « Microsoft 365 E5 »</strong> : les blocs
-      2, 3 et 4 tournent tels quels, mais le bloc 1 exige un achat. Prix public de Microsoft
+      <li><strong>On n'y voit que « Entra ID P2 » ou « Microsoft 365 E5 »</strong> : le bloc 2
+      (sauf ses options Governance), le bloc 4 et le SCIM du bloc 3 tournent tels quels ; les
+      apps sans SCIM passent par une Logic App autonome plutôt qu'une custom task. Le bloc 1
+      exige un achat. Prix public de Microsoft
       Entra ID Governance : 7 $ par utilisateur et par mois, engagement annuel ; il faut une
       licence par utilisateur dans le périmètre des workflows. Le « Step Up for P2 » n'a pas de
       prix public : à demander au revendeur.</li>
@@ -986,7 +994,8 @@
     <h4>Hors périmètre natif</h4>
     <p>Approbation conditionnelle à une règle métier complexe, ou intégration avec un outil de
     ticketing externe pour tracer la demande côté IT : nécessite une Logic App en Custom
-    Extension, rien de natif dans la policy d'approbation standard.</p>
+    Extension, rien de natif dans la policy d'approbation standard. Ces extensions exigent la
+    licence Governance, P2 seul ne suffit pas.</p>
   </section>
 
   <section class="doc-section" id="c4">
@@ -1072,10 +1081,11 @@
     <h4>Hors périmètre natif — app sans SCIM</h4>
     <p>Deux options, ni l'une ni l'autre native :</p>
     <ul>
-      <li><strong>Logic App / Function en extension Custom Task</strong> (même point de sortie
-      qu'en Phase 1, §3) : appel API propriétaire depuis un connecteur Logic App. Coût de
-      développement et de maintenance, plus consommation Azure — le coût variable déjà signalé au
-      dossier.</li>
+      <li><strong>Logic App</strong> : appel API propriétaire depuis un connecteur Logic App. Deux
+      branchements possibles — en <em>custom task</em> des Lifecycle Workflows (même point de
+      sortie qu'en Phase 1, §3 ; licence Governance), ou en Logic App autonome déclenchée par le
+      job d'écriture du bloc 4 ou par les provisioning logs (P1 suffit). Coût de développement et
+      de maintenance, plus consommation Azure — le coût variable déjà signalé au dossier.</li>
       <li><strong>Gestion manuelle assumée</strong> : pour une app à faible usage ou peu sensible,
       ne pas automatiser et documenter que la création/suppression reste un geste manuel IT — à
       couvrir par le bloc 4 (réconciliation) pour détecter les oublis, plutôt que de laisser un
